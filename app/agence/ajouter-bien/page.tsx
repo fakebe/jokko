@@ -83,21 +83,21 @@ export default function AjouterBienPage() {
     }
 
     const { error } = await supabase.from("biens").insert({
-  agence_id: agence.id,
-  user_id: user.id,
-  titre,
-  type_bien: typeBien,
-  transaction,
-  statut: "Disponible",
-  ville,
-  quartier,
-  prix: Number(prix),
-  chambres: chambres ? Number(chambres) : null,
-  salles_bain: sallesBain ? Number(sallesBain) : null,
-  surface: surface ? Number(surface) : null,
-  description,
-  image_url: imageUrl || null,
-});
+      agence_id: agence.id,
+      user_id: user.id,
+      titre,
+      type_bien: typeBien,
+      transaction,
+      statut: "Disponible",
+      ville,
+      quartier,
+      prix: Number(prix),
+      chambres: chambres ? Number(chambres) : null,
+      salles_bain: sallesBain ? Number(sallesBain) : null,
+      surface: surface ? Number(surface) : null,
+      description,
+      image_url: imageUrl || null,
+    });
 
     if (error) {
       console.error("ERREUR AJOUT BIEN :", error);
@@ -135,7 +135,7 @@ export default function AjouterBienPage() {
             </h1>
 
             <p className="text-gray-600 mt-2">
-              Publiez un nouveau bien immobilier sur Jokko.
+              Publiez un nouveau bien immobilier sur FC Immo.
             </p>
           </div>
 

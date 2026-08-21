@@ -2,253 +2,486 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
 import { supabase } from "@/lib/supabase";
 
 type Bien = {
   id: string;
+  titre: string;
+  type_bien: string;
   transaction: string;
+  statut: string | null;
+  ville: string;
+  quartier: string | null;
+  prix: number;
+  chambres: number | null;
+  salles_bain: number | null;
+  surface: number | null;
+  image_url: string | null;
 };
 
-export default function AgencePage() {
+const categories = [
+  { icon: "🏠", name: "Maisons", type: "Maison" },
+  { icon: "🏢", name: "Appartements", type: "Appartement" },
+  { icon: "🌳", name: "Terrains", type: "Terrain" },
+  { icon: "🏪", name: "Locaux commerciaux", type: "Commerce" },
+];
+
+export default function Home() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(true);
   const [biens, setBiens] = useState<Bien[]>([]);
+  const [typeRecherche, setTypeRecherche] = useState("");
+  const [villeRecherche, setVilleRecherche] = useState("");
+  const [transactionRecherche, setTransactionRecherche] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function chargerDashboard() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    chargerBiens();
+  }, []);
 
-      if (!user) {
-        router.push("/connexion");
-        return;
-      }
+  async function chargerBiens() {
+    setLoading(true);
 
-      setEmail(user.email ?? "");
+    const { data, error } = await supabase
+      .from("biens")
+      .select(
+        "id,titre,type_bien,transaction,statut,ville,quartier,prix,chambres,salles_bain,surface,image_url"
+      )
+      .eq("statut", "Disponible")
+      .order("created_at", { ascending: false })
+      .limit(6);
 
-      const { data, error } = await supabase
-        .from("biens")
-        .select("id, transaction")
-        .eq("user_id", user.id);
-
-      if (error) {
-        console.error("ERREUR DASHBOARD :", error);
-        setBiens([]);
-      } else {
-        setBiens(data || []);
-      }
-
+    if (error) {
+      console.error("ERREUR CHARGEMENT BIENS :", error);
+      setBiens([]);
       setLoading(false);
+      return;
     }
 
-    chargerDashboard();
-  }, [router]);
-
-  async function deconnexion() {
-    await supabase.auth.signOut();
-    router.push("/connexion");
+    setBiens(data || []);
+    setLoading(false);
   }
 
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">
-          Chargement du tableau de bord...
-        </p>
-      </main>
-    );
+  function rechercher() {
+    const params = new URLSearchParams();
+
+    if (typeRecherche) {
+      params.set("type", typeRecherche);
+    }
+
+    if (villeRecherche) {
+      params.set("ville", villeRecherche);
+    }
+
+    if (transactionRecherche) {
+      params.set("transaction", transactionRecherche);
+    }
+
+    router.push(`/recherche?${params.toString()}`);
   }
-
-  const totalBiens = biens.length;
-
-  const biensVente = biens.filter(
-    (bien) => bien.transaction === "Vente"
-  ).length;
-
-  const biensLocation = biens.filter(
-    (bien) => bien.transaction === "Location"
-  ).length;
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <>
+      <Navbar />
 
-      {/* HEADER */}
-      <header className="bg-green-700 text-white">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <main className="min-h-screen bg-gray-50">
 
-          <div>
-            <h1 className="text-2xl font-bold">
-              🏡 Jokko
+        {/* HERO */}
+        <section className="bg-green-700 text-white px-6 py-20">
+          <div className="max-w-6xl mx-auto text-center">
+
+            <p className="text-green-200 font-medium mb-3">
+              🇸🇳 L'immobilier au Sénégal, simplement
+            </p>
+
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Trouver. Louer. Acheter.
+              <br />
+
+              <span className="text-green-200">
+                En toute confiance.
+              </span>
             </h1>
 
-            <p className="text-green-100 text-sm">
-              Tableau de bord agence
+            <p className="text-lg text-green-50 max-w-2xl mx-auto mb-10">
+              Découvrez des maisons, appartements, terrains et locaux
+              commerciaux partout au Sénégal.
             </p>
+
+            {/* RECHERCHE */}
+            <div className="bg-white rounded-2xl p-3 max-w-5xl mx-auto shadow-xl">
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+                <select
+                  value={transactionRecherche}
+                  onChange={(e) =>
+                    setTransactionRecherche(e.target.value)
+                  }
+                  className="p-4 rounded-xl border border-gray-200 text-gray-700 bg-white"
+                >
+                  <option value="">
+                    Vente ou location
+                  </option>
+
+                  <option value="Vente">
+                    À vendre
+                  </option>
+
+                  <option value="Location">
+                    À louer
+                  </option>
+                </select>
+
+                <select
+                  value={typeRecherche}
+                  onChange={(e) =>
+                    setTypeRecherche(e.target.value)
+                  }
+                  className="p-4 rounded-xl border border-gray-200 text-gray-700 bg-white"
+                >
+                  <option value="">
+                    Type de bien
+                  </option>
+
+                  <option value="Maison">
+                    Maison
+                  </option>
+
+                  <option value="Appartement">
+                    Appartement
+                  </option>
+
+                  <option value="Terrain">
+                    Terrain
+                  </option>
+
+                  <option value="Villa">
+                    Villa
+                  </option>
+
+                  <option value="Bureau">
+                    Bureau
+                  </option>
+
+                  <option value="Commerce">
+                    Commerce
+                  </option>
+
+                  <option value="Immeuble">
+                    Immeuble
+                  </option>
+                </select>
+
+                <select
+                  value={villeRecherche}
+                  onChange={(e) =>
+                    setVilleRecherche(e.target.value)
+                  }
+                  className="p-4 rounded-xl border border-gray-200 text-gray-700 bg-white"
+                >
+                  <option value="">
+                    Où ?
+                  </option>
+
+                  <option value="Dakar">
+                    Dakar
+                  </option>
+
+                  <option value="Rufisque">
+                    Rufisque
+                  </option>
+
+                  <option value="Thiès">
+                    Thiès
+                  </option>
+
+                  <option value="Mbour">
+                    Mbour
+                  </option>
+
+                  <option value="Saint-Louis">
+                    Saint-Louis
+                  </option>
+
+                  <option value="Ziguinchor">
+                    Ziguinchor
+                  </option>
+                </select>
+
+                <button
+                  onClick={rechercher}
+                  className="bg-green-600 hover:bg-green-800 text-white font-semibold p-4 rounded-xl transition"
+                >
+                  🔍 Rechercher
+                </button>
+
+              </div>
+            </div>
           </div>
+        </section>
 
-          <button
-            onClick={deconnexion}
-            className="bg-white text-green-700 px-4 py-2 rounded-lg font-semibold hover:bg-green-50"
-          >
-            Déconnexion
-          </button>
+        {/* CATÉGORIES */}
+        <section className="max-w-6xl mx-auto px-6 py-14">
 
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-
-        {/* BIENVENUE */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-
-          <h2 className="text-2xl font-bold text-gray-800">
-            Bienvenue dans votre espace agence 👋
+          <h2 className="text-3xl font-bold text-gray-800 text-center mb-10">
+            Que cherchez-vous ?
           </h2>
 
-          <p className="text-gray-600 mt-2">
-            Connecté avec :{" "}
-            <strong>{email}</strong>
-          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
 
-        </div>
+            {categories.map((category) => (
+              <button
+                key={category.name}
+                onClick={() => {
+                  router.push(
+                    `/recherche?type=${encodeURIComponent(
+                      category.type
+                    )}`
+                  );
+                }}
+                className="bg-white rounded-2xl p-7 shadow-sm hover:shadow-lg border border-gray-100 transition text-center"
+              >
+                <div className="text-4xl mb-4">
+                  {category.icon}
+                </div>
 
-        {/* STATISTIQUES */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-          {/* TOTAL */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="text-4xl mb-3">
-              🏠
-            </div>
-
-            <p className="text-gray-500">
-              Total des biens
-            </p>
-
-            <p className="text-3xl font-bold text-gray-800 mt-2">
-              {totalBiens}
-            </p>
-          </div>
-
-          {/* VENTE */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="text-4xl mb-3">
-              💰
-            </div>
-
-            <p className="text-gray-500">
-              Biens à vendre
-            </p>
-
-            <p className="text-3xl font-bold text-green-700 mt-2">
-              {biensVente}
-            </p>
-          </div>
-
-          {/* LOCATION */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="text-4xl mb-3">
-              🔑
-            </div>
-
-            <p className="text-gray-500">
-              Biens à louer
-            </p>
-
-            <p className="text-3xl font-bold text-blue-700 mt-2">
-              {biensLocation}
-            </p>
-          </div>
-
-        </div>
-
-        {/* ACTIONS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          {/* MES BIENS */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-
-            <div className="text-4xl mb-4">
-              🏠
-            </div>
-
-            <h3 className="text-xl font-bold text-gray-800">
-              Mes biens
-            </h3>
-
-            <p className="text-gray-500 mt-2">
-              Gérez vos maisons, appartements, terrains et autres biens.
-            </p>
-
-            <button
-              onClick={() =>
-                router.push("/agence/mes-biens")
-              }
-              className="mt-5 w-full bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3 rounded-xl"
-            >
-              🏠 Voir mes biens
-            </button>
+                <h3 className="font-semibold text-gray-800">
+                  {category.name}
+                </h3>
+              </button>
+            ))}
 
           </div>
+        </section>
 
-          {/* AJOUTER */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+        {/* ANNONCES */}
+        <section className="bg-white py-14">
 
-            <div className="text-4xl mb-4">
-              ➕
+          <div className="max-w-6xl mx-auto px-6">
+
+            <div className="flex justify-between items-center mb-8">
+
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800">
+                  Annonces récentes
+                </h2>
+
+                <p className="text-gray-500 mt-2">
+                  Découvrez les dernières offres disponibles.
+                </p>
+              </div>
+
+              <button
+                onClick={() => router.push("/recherche")}
+                className="text-green-700 font-semibold hover:underline"
+              >
+                Voir tout →
+              </button>
+
             </div>
 
-            <h3 className="text-xl font-bold text-gray-800">
-              Ajouter un bien
-            </h3>
+            {loading ? (
+              <div className="text-center py-10 text-gray-500">
+                Chargement des annonces...
+              </div>
+            ) : biens.length === 0 ? (
+              <div className="text-center py-10">
 
-            <p className="text-gray-500 mt-2">
-              Publiez rapidement un nouveau bien immobilier.
+                <div className="text-5xl mb-4">
+                  🏠
+                </div>
+
+                <p className="text-gray-500">
+                  Aucune annonce disponible pour le moment.
+                </p>
+
+              </div>
+            ) : (
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                {biens.map((bien) => (
+                  <PropertyCard
+                    key={bien.id}
+                    bien={bien}
+                    onClick={() =>
+                      router.push(`/bien/${bien.id}`)
+                    }
+                  />
+                ))}
+
+              </div>
+
+            )}
+
+          </div>
+        </section>
+
+        {/* CONFIANCE */}
+        <section className="max-w-6xl mx-auto px-6 py-16 text-center">
+
+          <h2 className="text-3xl font-bold text-gray-800 mb-10">
+            Pourquoi choisir FC Immo ?
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            <div>
+              <div className="text-4xl mb-4">
+                🔎
+              </div>
+
+              <h3 className="font-bold text-xl mb-2">
+                Trouvez facilement
+              </h3>
+
+              <p className="text-gray-500">
+                Recherchez votre futur bien selon vos besoins et votre
+                budget.
+              </p>
+            </div>
+
+            <div>
+              <div className="text-4xl mb-4">
+                🤝
+              </div>
+
+              <h3 className="font-bold text-xl mb-2">
+                Des professionnels
+              </h3>
+
+              <p className="text-gray-500">
+                Retrouvez progressivement des agences vérifiées sur la
+                plateforme.
+              </p>
+            </div>
+
+            <div>
+              <div className="text-4xl mb-4">
+                🇸🇳
+              </div>
+
+              <h3 className="font-bold text-xl mb-2">
+                Pensé pour le Sénégal
+              </h3>
+
+              <p className="text-gray-500">
+                Une plateforme conçue pour répondre aux réalités du marché
+                sénégalais.
+              </p>
+            </div>
+
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="bg-gray-900 text-white py-10">
+
+          <div className="max-w-6xl mx-auto px-6 text-center">
+
+            <h2 className="text-2xl font-bold text-green-400 mb-3">
+              🏢 FC Immo
+            </h2>
+
+            <p className="text-gray-400">
+              Trouver. Louer. Acheter. En toute confiance.
             </p>
 
-            <button
-              onClick={() =>
-                router.push("/agence/ajouter-bien")
-              }
-              className="mt-5 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold"
-            >
-              ➕ Ajouter un bien
-            </button>
+            <p className="text-gray-500 text-sm mt-6">
+              © 2026 FC Immo — Tous droits réservés.
+            </p>
 
           </div>
 
-          {/* AGENCE */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+        </footer>
 
-            <div className="text-4xl mb-4">
-              🏢
-            </div>
+      </main>
+    </>
+  );
+}
 
-            <h3 className="text-xl font-bold text-gray-800">
-              Mon agence
-            </h3>
+function PropertyCard({
+  bien,
+  onClick,
+}: {
+  bien: Bien;
+  onClick: () => void;
+}) {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition">
 
-            <p className="text-gray-500 mt-2">
-              Consultez et modifiez les informations de votre agence.
-            </p>
+      {/* PHOTO */}
+      <div className="h-48 bg-green-100 flex items-center justify-center overflow-hidden">
 
-            <button
-              onClick={() =>
-                router.push("/agence/mon-agence")
-              }
-              className="mt-5 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold"
-            >
-              🏢 Modifier mon agence
-            </button>
-
-          </div>
-
-        </div>
+        {bien.image_url ? (
+          <img
+            src={bien.image_url}
+            alt={bien.titre}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-6xl">
+            🏡
+          </span>
+        )}
 
       </div>
-    </main>
+
+      <div className="p-5">
+
+        <span className="text-sm text-green-700 font-semibold">
+          {bien.transaction}
+        </span>
+
+        <h3 className="text-xl font-bold text-gray-800 mt-2">
+          {bien.titre}
+        </h3>
+
+        <p className="text-gray-500 mt-2">
+          📍 {bien.ville}
+          {bien.quartier
+            ? `, ${bien.quartier}`
+            : ""}
+        </p>
+
+        <p className="text-green-700 font-bold mt-4">
+          {Number(bien.prix).toLocaleString("fr-FR")} FCFA
+        </p>
+
+        <div className="grid grid-cols-3 gap-2 mt-4 text-sm text-gray-600">
+
+          <div className="bg-gray-50 rounded-lg p-2 text-center">
+            🛏️
+            <br />
+            {bien.chambres ?? "-"}
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-2 text-center">
+            🚿
+            <br />
+            {bien.salles_bain ?? "-"}
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-2 text-center">
+            📐
+            <br />
+            {bien.surface
+              ? `${bien.surface} m²`
+              : "-"}
+          </div>
+
+        </div>
+
+        <button
+          onClick={onClick}
+          className="w-full mt-4 border border-green-600 text-green-700 py-2 rounded-lg hover:bg-green-600 hover:text-white transition"
+        >
+          👁️ Voir l'annonce
+        </button>
+
+      </div>
+    </div>
   );
 }

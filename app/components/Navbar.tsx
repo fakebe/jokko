@@ -3,7 +3,7 @@ export default function Navbar() {
     <header className="bg-white shadow-md">
       <nav className="max-w-7xl mx-auto flex items-center justify-between p-5">
         <h1 className="text-2xl font-bold text-green-700">
-          🏡 Jokko
+          🏢 FC Immo
         </h1>
 
         <div className="flex gap-6 items-center">

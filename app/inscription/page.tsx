@@ -109,11 +109,11 @@ export default function InscriptionPage() {
         <div className="text-center mb-8">
 
           <div className="text-4xl mb-3">
-            🏡
+            🏢
           </div>
 
           <h1 className="text-3xl font-bold text-green-700">
-            Rejoindre Jokko
+            Rejoindre FC Immo
           </h1>
 
           <p className="text-gray-600 mt-2">
@@ -272,7 +272,7 @@ export default function InscriptionPage() {
 
           <p className="text-center text-sm text-gray-500 mt-5">
             En créant votre compte, vous acceptez les conditions
-            d'utilisation de Jokko.
+            d'utilisation de FC Immo.
           </p>
 
         </form>

@@ -4,7 +4,9 @@ export default function PublierPage() {
       <div className="max-w-4xl mx-auto px-6 py-12">
 
         <div className="mb-8">
-          <p className="text-green-600 font-semibold">Jokko.sn</p>
+          <p className="text-green-600 font-semibold">
+            FC Immo
+          </p>
 
           <h1 className="text-4xl font-bold text-gray-800 mt-2">
             Publier une annonce

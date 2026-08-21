@@ -91,7 +91,7 @@ export default function AgencesPage() {
             </h1>
 
             <p className="text-gray-500 mt-2">
-              Découvrez les agences présentes sur Jokko.
+              Découvrez les agences présentes sur FC Immo.
             </p>
 
           </div>
@@ -119,7 +119,7 @@ export default function AgencesPage() {
 
               <p className="text-gray-500 mt-2">
                 Les agences apparaîtront ici lorsqu'elles seront inscrites
-                sur Jokko.
+                sur FC Immo.
               </p>
 
             </div>
@@ -224,13 +224,14 @@ export default function AgencesPage() {
                       )}
 
                     </div>
-                    
-<a
-  href={`/agences/${agence.id}`}
-  className="block w-full mt-4 border border-green-600 text-green-700 hover:bg-green-50 font-semibold py-3 rounded-xl text-center"
->
-  👁️ Voir l'agence
-</a>
+
+                    <a
+                      href={`/agences/${agence.id}`}
+                      className="block w-full mt-4 border border-green-600 text-green-700 hover:bg-green-50 font-semibold py-3 rounded-xl text-center"
+                    >
+                      👁️ Voir l'agence
+                    </a>
+
                   </div>
                 </div>
               ))}

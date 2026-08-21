@@ -203,6 +203,7 @@ export default async function BienPage({ params }: PageProps) {
                       <p className="text-sm text-gray-400">
                         📍 Ville
                       </p>
+
                       <p className="font-semibold text-gray-800 mt-1">
                         {agence.ville || "-"}
                       </p>
@@ -212,6 +213,7 @@ export default async function BienPage({ params }: PageProps) {
                       <p className="text-sm text-gray-400">
                         📞 Téléphone
                       </p>
+
                       <p className="font-semibold text-gray-800 mt-1">
                         {agence.telephone || "-"}
                       </p>
@@ -221,6 +223,7 @@ export default async function BienPage({ params }: PageProps) {
                       <p className="text-sm text-gray-400">
                         ✉️ Email
                       </p>
+
                       <p className="font-semibold text-gray-800 mt-1">
                         {agence.email || "-"}
                       </p>
@@ -241,22 +244,24 @@ export default async function BienPage({ params }: PageProps) {
                     )}
 
                     {agence.telephone && (
-                     <a
-  href={`https://wa.me/221${agence.telephone
-    .replace(/\D/g, "")
-    .replace(/^221/, "")}?text=${encodeURIComponent(
-      `Bonjour, je suis intéressé(e) par le bien "${bien.titre}" publié sur Jokko. Prix : ${Number(
-        bien.prix
-      ).toLocaleString("fr-FR")} FCFA. ${
-        bien.quartier ? `Quartier : ${bien.quartier}.` : ""
-      }`
-    )}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl text-center"
->
-  💬 WhatsApp
-</a>
+                      <a
+                        href={`https://wa.me/221${agence.telephone
+                          .replace(/\D/g, "")
+                          .replace(/^221/, "")}?text=${encodeURIComponent(
+                          `Bonjour, je suis intéressé(e) par le bien "${bien.titre}" publié sur FC Immo. Prix : ${Number(
+                            bien.prix
+                          ).toLocaleString("fr-FR")} FCFA. ${
+                            bien.quartier
+                              ? `Quartier : ${bien.quartier}.`
+                              : ""
+                          }`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl text-center"
+                      >
+                        💬 WhatsApp
+                      </a>
                     )}
 
                     {agence.email && (

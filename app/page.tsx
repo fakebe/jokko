@@ -43,14 +43,14 @@ export default function Home() {
   async function chargerBiens() {
     setLoading(true);
 
-   const { data, error } = await supabase
-  .from("biens")
-  .select(
-    "id,titre,type_bien,transaction,statut,ville,quartier,prix,chambres,salles_bain,surface,image_url"
-  )
-  .eq("statut", "Disponible")
-  .order("created_at", { ascending: false })
-  .limit(6);
+    const { data, error } = await supabase
+      .from("biens")
+      .select(
+        "id,titre,type_bien,transaction,statut,ville,quartier,prix,chambres,salles_bain,surface,image_url"
+      )
+      .eq("statut", "Disponible")
+      .order("created_at", { ascending: false })
+      .limit(6);
 
     if (error) {
       console.error("ERREUR CHARGEMENT BIENS :", error);
@@ -78,7 +78,11 @@ export default function Home() {
       params.set("transaction", transactionRecherche);
     }
 
-    router.push(`/recherche?${params.toString()}`);
+    const queryString = params.toString();
+
+    router.push(
+      queryString ? `/recherche?${queryString}` : "/recherche"
+    );
   }
 
   return (
@@ -98,7 +102,6 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Trouver. Louer. Acheter.
               <br />
-
               <span className="text-green-200">
                 En toute confiance.
               </span>
@@ -261,7 +264,7 @@ export default function Home() {
 
           <div className="max-w-6xl mx-auto px-6">
 
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
 
               <div>
                 <h2 className="text-3xl font-bold text-gray-800">
@@ -299,7 +302,6 @@ export default function Home() {
 
               </div>
             ) : (
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {biens.map((bien) => (
@@ -313,7 +315,6 @@ export default function Home() {
                 ))}
 
               </div>
-
             )}
 
           </div>
@@ -323,7 +324,7 @@ export default function Home() {
         <section className="max-w-6xl mx-auto px-6 py-16 text-center">
 
           <h2 className="text-3xl font-bold text-gray-800 mb-10">
-            Pourquoi choisir Jokko ?
+            Pourquoi choisir FC Immo ?
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -382,7 +383,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-6 text-center">
 
             <h2 className="text-2xl font-bold text-green-400 mb-3">
-              🏡 Jokko
+              🏢 FC Immo
             </h2>
 
             <p className="text-gray-400">
@@ -390,7 +391,7 @@ export default function Home() {
             </p>
 
             <p className="text-gray-500 text-sm mt-6">
-              © 2026 Jokko.sn — Tous droits réservés.
+              © 2026 FC Immo — Tous droits réservés.
             </p>
 
           </div>

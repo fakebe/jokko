@@ -48,7 +48,7 @@ export default function Navbar() {
           onClick={() => router.push("/")}
           className="text-2xl font-bold text-green-700"
         >
-          🏡 Jokko
+          🏢 FC Immo
         </button>
 
         {/* NAVIGATION */}
