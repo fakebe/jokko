@@ -413,12 +413,13 @@ function PropertyCard({
   return (
     <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group">
 
+      {/* IMAGE */}
       <button
         type="button"
         onClick={onClick}
         className="block w-full text-left"
       >
-        <div className="relative h-56 bg-green-50 overflow-hidden">
+        <div className="relative h-48 sm:h-56 bg-green-50 overflow-hidden">
 
           {bien.image_url ? (
             <img
@@ -428,18 +429,20 @@ function PropertyCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className="text-7xl">🏡</span>
+              <span className="text-6xl sm:text-7xl">🏡</span>
             </div>
           )}
 
-          <div className="absolute top-4 left-4">
-            <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md">
+          {/* BADGE TRANSACTION */}
+          <div className="absolute top-3 left-3">
+            <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-md">
               {bien.transaction === "Vente" ? "À vendre" : "À louer"}
             </span>
           </div>
 
-          <div className="absolute top-4 right-4">
-            <span className="bg-white/95 text-gray-700 px-3 py-1.5 rounded-full text-sm font-semibold shadow-md">
+          {/* BADGE TYPE */}
+          <div className="absolute top-3 right-3">
+            <span className="bg-white/95 text-gray-700 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-md">
               {bien.type_bien}
             </span>
           </div>
@@ -447,65 +450,94 @@ function PropertyCard({
         </div>
       </button>
 
-      <div className="p-5">
+      {/* CONTENU */}
+      <div className="p-4 sm:p-5">
 
+        {/* TITRE */}
         <button
           type="button"
           onClick={onClick}
           className="text-left w-full"
         >
-          <h3 className="text-xl font-bold text-gray-900 hover:text-green-700">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 hover:text-green-700 transition line-clamp-2">
             {bien.titre}
           </h3>
         </button>
 
-        <p className="text-gray-500 mt-2">
+        {/* LOCALISATION */}
+        <p className="text-gray-500 text-sm sm:text-base mt-2">
           📍 {bien.ville}
           {bien.quartier ? `, ${bien.quartier}` : ""}
         </p>
 
-        <p className="text-2xl font-bold text-green-700 mt-4">
-          {Number(bien.prix).toLocaleString("fr-FR")} FCFA
-        </p>
+        {/* PRIX */}
+        <div className="mt-4">
 
-        <div className="grid grid-cols-3 gap-2 mt-5">
+          <p className="text-xl sm:text-2xl font-bold text-green-700">
+            {Number(bien.prix).toLocaleString("fr-FR")} FCFA
+          </p>
 
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <div>🛏️</div>
-            <p className="font-semibold text-gray-800">
+          <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            Prix affiché
+          </p>
+
+        </div>
+
+        {/* CARACTÉRISTIQUES */}
+        <div className="grid grid-cols-3 gap-2 mt-4">
+
+          {/* CHAMBRES */}
+          <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3 text-center">
+            <div className="text-lg sm:text-xl">
+              🛏️
+            </div>
+
+            <p className="font-semibold text-gray-800 mt-1">
               {bien.chambres ?? "-"}
             </p>
-            <p className="text-xs text-gray-500">
+
+            <p className="text-[11px] sm:text-xs text-gray-500">
               Chambres
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <div>🚿</div>
-            <p className="font-semibold text-gray-800">
+          {/* SALLES DE BAIN */}
+          <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3 text-center">
+            <div className="text-lg sm:text-xl">
+              🚿
+            </div>
+
+            <p className="font-semibold text-gray-800 mt-1">
               {bien.salles_bain ?? "-"}
             </p>
-            <p className="text-xs text-gray-500">
+
+            <p className="text-[11px] sm:text-xs text-gray-500">
               Salles de bain
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <div>📐</div>
-            <p className="font-semibold text-gray-800">
+          {/* SURFACE */}
+          <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3 text-center">
+            <div className="text-lg sm:text-xl">
+              📐
+            </div>
+
+            <p className="font-semibold text-gray-800 mt-1">
               {bien.surface ?? "-"}
             </p>
-            <p className="text-xs text-gray-500">
+
+            <p className="text-[11px] sm:text-xs text-gray-500">
               m²
             </p>
           </div>
 
         </div>
 
+        {/* BOUTON */}
         <button
           type="button"
           onClick={onClick}
-          className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl"
+          className="w-full mt-5 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3.5 rounded-xl transition"
         >
           👁️ Voir l'annonce
         </button>
