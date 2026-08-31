@@ -411,78 +411,106 @@ function PropertyCard({
   onClick: () => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition">
+    <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group">
 
-      {/* PHOTO */}
-      <div className="h-48 bg-green-100 flex items-center justify-center overflow-hidden">
+      <button
+        type="button"
+        onClick={onClick}
+        className="block w-full text-left"
+      >
+        <div className="relative h-56 bg-green-50 overflow-hidden">
 
-        {bien.image_url ? (
-          <img
-            src={bien.image_url}
-            alt={bien.titre}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <span className="text-6xl">
-            🏡
-          </span>
-        )}
+          {bien.image_url ? (
+            <img
+              src={bien.image_url}
+              alt={bien.titre}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-7xl">🏡</span>
+            </div>
+          )}
 
-      </div>
+          <div className="absolute top-4 left-4">
+            <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md">
+              {bien.transaction === "Vente" ? "À vendre" : "À louer"}
+            </span>
+          </div>
+
+          <div className="absolute top-4 right-4">
+            <span className="bg-white/95 text-gray-700 px-3 py-1.5 rounded-full text-sm font-semibold shadow-md">
+              {bien.type_bien}
+            </span>
+          </div>
+
+        </div>
+      </button>
 
       <div className="p-5">
 
-        <span className="text-sm text-green-700 font-semibold">
-          {bien.transaction}
-        </span>
-
-        <h3 className="text-xl font-bold text-gray-800 mt-2">
-          {bien.titre}
-        </h3>
+        <button
+          type="button"
+          onClick={onClick}
+          className="text-left w-full"
+        >
+          <h3 className="text-xl font-bold text-gray-900 hover:text-green-700">
+            {bien.titre}
+          </h3>
+        </button>
 
         <p className="text-gray-500 mt-2">
           📍 {bien.ville}
-          {bien.quartier
-            ? `, ${bien.quartier}`
-            : ""}
+          {bien.quartier ? `, ${bien.quartier}` : ""}
         </p>
 
-        <p className="text-green-700 font-bold mt-4">
+        <p className="text-2xl font-bold text-green-700 mt-4">
           {Number(bien.prix).toLocaleString("fr-FR")} FCFA
         </p>
 
-        <div className="grid grid-cols-3 gap-2 mt-4 text-sm text-gray-600">
+        <div className="grid grid-cols-3 gap-2 mt-5">
 
-          <div className="bg-gray-50 rounded-lg p-2 text-center">
-            🛏️
-            <br />
-            {bien.chambres ?? "-"}
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <div>🛏️</div>
+            <p className="font-semibold text-gray-800">
+              {bien.chambres ?? "-"}
+            </p>
+            <p className="text-xs text-gray-500">
+              Chambres
+            </p>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-2 text-center">
-            🚿
-            <br />
-            {bien.salles_bain ?? "-"}
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <div>🚿</div>
+            <p className="font-semibold text-gray-800">
+              {bien.salles_bain ?? "-"}
+            </p>
+            <p className="text-xs text-gray-500">
+              Salles de bain
+            </p>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-2 text-center">
-            📐
-            <br />
-            {bien.surface
-              ? `${bien.surface} m²`
-              : "-"}
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <div>📐</div>
+            <p className="font-semibold text-gray-800">
+              {bien.surface ?? "-"}
+            </p>
+            <p className="text-xs text-gray-500">
+              m²
+            </p>
           </div>
 
         </div>
 
         <button
+          type="button"
           onClick={onClick}
-          className="w-full mt-4 border border-green-600 text-green-700 py-2 rounded-lg hover:bg-green-600 hover:text-white transition"
+          className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl"
         >
           👁️ Voir l'annonce
         </button>
 
       </div>
-    </div>
+    </article>
   );
 }
