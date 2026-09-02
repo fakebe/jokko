@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-type Statut = "Disponible" | "Vendu" | "Loué" | "Désactivé";
+type Statut =
+  | "Disponible"
+  | "Vendu"
+  | "Loué"
+  | "Désactivé";
 
 type Bien = {
   id: string;
@@ -85,7 +89,10 @@ export default function MesBiensPage() {
       .eq("user_id", user.id);
 
     if (error) {
-      console.error("ERREUR MODIFICATION STATUT :", error);
+      console.error(
+        "ERREUR MODIFICATION STATUT :",
+        error
+      );
       alert("Impossible de modifier le statut.");
       return;
     }
@@ -93,7 +100,10 @@ export default function MesBiensPage() {
     setBiens((anciensBiens) =>
       anciensBiens.map((bien) =>
         bien.id === bienId
-          ? { ...bien, statut: nouveauStatut }
+          ? {
+              ...bien,
+              statut: nouveauStatut,
+            }
           : bien
       )
     );
@@ -122,71 +132,136 @@ export default function MesBiensPage() {
       .eq("user_id", user.id);
 
     if (error) {
-      console.error("ERREUR SUPPRESSION :", error);
+      console.error(
+        "ERREUR SUPPRESSION :",
+        error
+      );
       alert("Impossible de supprimer le bien.");
       return;
     }
 
     setBiens((anciensBiens) =>
-      anciensBiens.filter((bien) => bien.id !== bienId)
+      anciensBiens.filter(
+        (bien) => bien.id !== bienId
+      )
     );
   }
 
-  function styleStatut(statut: Statut | null) {
+  function styleStatut(
+    statut: Statut | null
+  ) {
     switch (statut) {
       case "Vendu":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 border-red-200";
 
       case "Loué":
-        return "bg-orange-100 text-orange-700";
+        return "bg-orange-100 text-orange-700 border-orange-200";
 
       case "Désactivé":
-        return "bg-gray-200 text-gray-600";
+        return "bg-gray-100 text-gray-600 border-gray-200";
 
       default:
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 text-green-700 border-green-200";
+    }
+  }
+
+  function iconeStatut(
+    statut: Statut
+  ) {
+    switch (statut) {
+      case "Vendu":
+        return "🔴";
+
+      case "Loué":
+        return "🟠";
+
+      case "Désactivé":
+        return "⚪";
+
+      default:
+        return "🟢";
     }
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-6xl mx-auto">
+    <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto">
 
         {/* EN-TÊTE */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-8">
 
           <div>
             <button
-              onClick={() => router.push("/agence")}
-              className="text-green-700 font-semibold hover:underline mb-3"
+              type="button"
+              onClick={() =>
+                router.push("/agence")
+              }
+              className="inline-flex items-center text-green-700 font-semibold hover:text-green-900 transition mb-4"
             >
               ← Retour à mon espace
             </button>
 
-            <h1 className="text-3xl font-bold text-green-700">
-              🏠 Mes biens
-            </h1>
+            <div>
+              <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+                Espace professionnel
+              </p>
 
-            <p className="text-gray-600 mt-2">
-              Retrouvez ici tous les biens publiés par votre agence.
-            </p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-1">
+                Mes biens
+              </h1>
+
+              <p className="text-gray-500 mt-2 max-w-2xl">
+                Gérez vos annonces immobilières, leurs statuts
+                et leurs informations depuis votre espace FC Immo.
+              </p>
+            </div>
           </div>
 
           <button
+            type="button"
             onClick={() =>
               router.push("/agence/ajouter-bien")
             }
-            className="bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-3 rounded-xl"
+            className="w-full lg:w-auto bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3.5 rounded-xl transition shadow-sm"
           >
             + Ajouter un bien
           </button>
 
         </div>
 
+        {/* COMPTEUR */}
+        {!loading && !message && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+              <div>
+                <p className="text-gray-500 text-sm">
+                  Biens enregistrés
+                </p>
+
+                <p className="text-3xl font-bold text-gray-900 mt-1">
+                  {biens.length}
+                </p>
+              </div>
+
+              <p className="text-sm text-gray-500">
+                {biens.length === 0
+                  ? "Aucune annonce"
+                  : `${biens.length} annonce${
+                      biens.length > 1 ? "s" : ""
+                    } dans votre espace`}
+              </p>
+
+            </div>
+          </div>
+        )}
+
         {/* CHARGEMENT */}
         {loading && (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-            <p className="text-gray-600">
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full border-4 border-green-200 border-t-green-600 animate-spin" />
+
+            <p className="text-gray-600 mt-5 font-medium">
               Chargement de vos biens...
             </p>
           </div>
@@ -194,232 +269,287 @@ export default function MesBiensPage() {
 
         {/* MESSAGE */}
         {!loading && message && (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
-            <p className="text-red-600 font-medium">
-              {message}
-            </p>
-          </div>
-        )}
-
-        {/* AUCUN BIEN */}
-        {!loading && !message && biens.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-10 text-center">
+          <div className="bg-white rounded-3xl border border-red-100 shadow-sm p-10 text-center">
 
             <div className="text-5xl mb-4">
-              🏠
+              ⚠️
             </div>
 
-            <h2 className="text-xl font-bold text-gray-800">
-              Aucun bien pour le moment
-            </h2>
-
-            <p className="text-gray-500 mt-2">
-              Commencez par ajouter votre premier bien immobilier.
+            <p className="text-red-600 font-semibold">
+              {message}
             </p>
 
             <button
-              onClick={() =>
-                router.push("/agence/ajouter-bien")
-              }
-              className="mt-6 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl"
+              type="button"
+              onClick={chargerBiens}
+              className="mt-5 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-3 rounded-xl"
             >
-              Ajouter mon premier bien
+              Réessayer
             </button>
 
           </div>
         )}
 
+        {/* AUCUN BIEN */}
+        {!loading &&
+          !message &&
+          biens.length === 0 && (
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10 sm:p-14 text-center">
+
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-green-50 flex items-center justify-center text-5xl">
+                🏠
+              </div>
+
+              <h2 className="text-2xl font-bold text-gray-900 mt-6">
+                Aucun bien pour le moment
+              </h2>
+
+              <p className="text-gray-500 mt-2 max-w-md mx-auto">
+                Commencez par ajouter votre premier bien immobilier
+                pour le publier sur FC Immo.
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  router.push("/agence/ajouter-bien")
+                }
+                className="mt-7 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3.5 rounded-xl transition"
+              >
+                + Ajouter mon premier bien
+              </button>
+
+            </div>
+          )}
+
         {/* LISTE */}
-        {!loading && biens.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {!loading &&
+          !message &&
+          biens.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-            {biens.map((bien) => {
+              {biens.map((bien) => {
+                const statut =
+                  bien.statut || "Disponible";
 
-              const statut = bien.statut || "Disponible";
+                return (
+                  <article
+                    key={bien.id}
+                    className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition"
+                  >
 
-              return (
-                <div
-                  key={bien.id}
-                  className="bg-white rounded-2xl shadow-sm overflow-hidden"
-                >
+                    {/* IMAGE */}
+                    <div className="relative h-56 bg-green-50 overflow-hidden">
 
-                  {/* PHOTO */}
-                  <div className="h-52 bg-green-100 flex items-center justify-center overflow-hidden">
+                      {bien.image_url ? (
+                        <img
+                          src={bien.image_url}
+                          alt={bien.titre}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-7xl">
+                            🏠
+                          </span>
+                        </div>
+                      )}
 
-                    {bien.image_url ? (
-                      <img
-                        src={bien.image_url}
-                        alt={bien.titre}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-6xl">
-                        🏠
-                      </span>
-                    )}
+                      {/* TRANSACTION */}
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-md">
+                          {bien.transaction ===
+                          "Vente"
+                            ? "À vendre"
+                            : "À louer"}
+                        </span>
+                      </div>
 
-                  </div>
+                      {/* STATUT */}
+                      <div className="absolute top-4 right-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs sm:text-sm font-bold shadow-sm ${styleStatut(
+                            statut
+                          )}`}
+                        >
+                          {iconeStatut(statut)}
+                          {statut}
+                        </span>
+                      </div>
 
-                  <div className="p-5">
+                    </div>
 
-                    {/* TRANSACTION + TYPE */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
+                    {/* CONTENU */}
+                    <div className="p-5">
 
-                      <span className="text-sm font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                        {bien.transaction}
-                      </span>
-
-                      <span className="text-sm text-gray-500">
+                      {/* TYPE */}
+                      <p className="text-sm font-semibold text-green-700">
                         {bien.type_bien}
-                      </span>
-
-                    </div>
-
-                    {/* STATUT */}
-                    <div className="mb-3">
-                      <span
-                        className={`inline-block text-sm font-semibold px-3 py-1 rounded-full ${styleStatut(
-                          statut
-                        )}`}
-                      >
-                        {statut === "Disponible" && "🟢 "}
-                        {statut === "Vendu" && "🔴 "}
-                        {statut === "Loué" && "🟠 "}
-                        {statut === "Désactivé" && "⚪ "}
-                        {statut}
-                      </span>
-                    </div>
-
-                    {/* TITRE */}
-                    <h2 className="text-xl font-bold text-gray-800">
-                      {bien.titre}
-                    </h2>
-
-                    {/* LOCALISATION */}
-                    <p className="text-gray-500 mt-2">
-                      📍 {bien.ville}
-                      {bien.quartier
-                        ? `, ${bien.quartier}`
-                        : ""}
-                    </p>
-
-                    {/* PRIX */}
-                    <p className="text-green-700 font-bold text-xl mt-4">
-                      {Number(
-                        bien.prix
-                      ).toLocaleString("fr-FR")}{" "}
-                      FCFA
-                    </p>
-
-                    {/* CARACTÉRISTIQUES */}
-                    <div className="grid grid-cols-3 gap-2 mt-4 text-sm text-gray-600">
-
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        🛏️
-                        <br />
-                        {bien.chambres ?? "-"}
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        🚿
-                        <br />
-                        {bien.salles_bain ?? "-"}
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        📐
-                        <br />
-                        {bien.surface
-                          ? `${bien.surface} m²`
-                          : "-"}
-                      </div>
-
-                    </div>
-
-                    {/* DESCRIPTION */}
-                    {bien.description && (
-                      <p className="text-gray-600 text-sm mt-4 line-clamp-3">
-                        {bien.description}
                       </p>
-                    )}
 
-                    {/* CHANGEMENT DE STATUT */}
-                    <div className="mt-5">
+                      {/* TITRE */}
+                      <h2 className="text-xl font-bold text-gray-900 mt-2 line-clamp-2">
+                        {bien.titre}
+                      </h2>
 
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Statut du bien
-                      </label>
+                      {/* LOCALISATION */}
+                      <p className="text-gray-500 text-sm mt-2">
+                        📍 {bien.ville}
+                        {bien.quartier
+                          ? `, ${bien.quartier}`
+                          : ""}
+                      </p>
 
-                      <select
-                        value={statut}
-                        onChange={(e) =>
-                          changerStatut(
-                            bien.id,
-                            e.target.value as Statut
-                          )
-                        }
-                        className="w-full p-3 rounded-lg border border-gray-300 bg-white"
-                      >
-                        <option value="Disponible">
-                          🟢 Disponible
-                        </option>
+                      {/* PRIX */}
+                      <p className="text-2xl font-extrabold text-green-700 mt-4">
+                        {Number(
+                          bien.prix
+                        ).toLocaleString("fr-FR")}{" "}
+                        <span className="text-base font-semibold">
+                          FCFA
+                        </span>
+                      </p>
 
-                        <option value="Vendu">
-                          🔴 Vendu
-                        </option>
+                      {/* CARACTÉRISTIQUES */}
+                      <div className="grid grid-cols-3 gap-2 mt-5">
 
-                        <option value="Loué">
-                          🟠 Loué
-                        </option>
+                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                          <div className="text-lg">
+                            🛏️
+                          </div>
 
-                        <option value="Désactivé">
-                          ⚪ Désactivé
-                        </option>
-                      </select>
+                          <p className="font-bold text-gray-800 mt-1">
+                            {bien.chambres ??
+                              "-"}
+                          </p>
 
-                    </div>
+                          <p className="text-[11px] text-gray-500">
+                            Chambres
+                          </p>
+                        </div>
 
-                    {/* BOUTONS */}
-                    <div className="mt-5 flex gap-3">
+                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                          <div className="text-lg">
+                            🚿
+                          </div>
 
+                          <p className="font-bold text-gray-800 mt-1">
+                            {bien.salles_bain ??
+                              "-"}
+                          </p>
+
+                          <p className="text-[11px] text-gray-500">
+                            S. de bain
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                          <div className="text-lg">
+                            📐
+                          </div>
+
+                          <p className="font-bold text-gray-800 mt-1">
+                            {bien.surface ??
+                              "-"}
+                          </p>
+
+                          <p className="text-[11px] text-gray-500">
+                            m²
+                          </p>
+                        </div>
+
+                      </div>
+
+                      {/* DESCRIPTION */}
+                      {bien.description && (
+                        <p className="text-gray-500 text-sm leading-6 mt-4 line-clamp-3">
+                          {bien.description}
+                        </p>
+                      )}
+
+                      {/* STATUT */}
+                      <div className="mt-5">
+
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Modifier le statut
+                        </label>
+
+                        <select
+                          value={statut}
+                          onChange={(e) =>
+                            changerStatut(
+                              bien.id,
+                              e.target.value as Statut
+                            )
+                          }
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                          <option value="Disponible">
+                            🟢 Disponible
+                          </option>
+
+                          <option value="Vendu">
+                            🔴 Vendu
+                          </option>
+
+                          <option value="Loué">
+                            🟠 Loué
+                          </option>
+
+                          <option value="Désactivé">
+                            ⚪ Désactivé
+                          </option>
+                        </select>
+
+                      </div>
+
+                      {/* ACTIONS */}
+                      <div className="grid grid-cols-2 gap-3 mt-5">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              `/bien/${bien.id}`
+                            )
+                          }
+                          className="border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-semibold py-3 rounded-xl transition"
+                        >
+                          👁️ Voir
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              `/agence/modifier-bien/${bien.id}`
+                            )
+                          }
+                          className="border-2 border-green-600 text-green-700 hover:bg-green-50 font-semibold py-3 rounded-xl transition"
+                        >
+                          ✏️ Modifier
+                        </button>
+
+                      </div>
+
+                      {/* SUPPRIMER */}
                       <button
+                        type="button"
                         onClick={() =>
-                          router.push(`/bien/${bien.id}`)
+                          supprimerBien(bien.id)
                         }
-                        className="flex-1 border border-blue-600 text-blue-700 hover:bg-blue-50 font-semibold py-2 rounded-lg"
+                        className="w-full mt-3 border-2 border-red-500 text-red-600 hover:bg-red-50 font-semibold py-3 rounded-xl transition"
                       >
-                        👁️ Voir
+                        🗑️ Supprimer ce bien
                       </button>
 
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/agence/modifier-bien/${bien.id}`
-                          )
-                        }
-                        className="flex-1 border border-green-600 text-green-700 hover:bg-green-50 font-semibold py-2 rounded-lg"
-                      >
-                        ✏️ Modifier
-                      </button>
-
                     </div>
+                  </article>
+                );
+              })}
 
-                    <button
-                      onClick={() =>
-                        supprimerBien(bien.id)
-                      }
-                      className="w-full mt-3 border border-red-500 text-red-600 hover:bg-red-50 font-semibold py-2 rounded-lg"
-                    >
-                      🗑️ Supprimer
-                    </button>
-
-                  </div>
-                </div>
-              );
-            })}
-
-          </div>
-        )}
+            </div>
+          )}
 
       </div>
     </main>
