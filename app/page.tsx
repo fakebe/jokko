@@ -377,27 +377,40 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FOOTER */}
-        <footer className="bg-gray-900 text-white py-10">
+       {/* FOOTER */}
+<footer className="bg-gray-950 text-white py-12">
 
-          <div className="max-w-6xl mx-auto px-6 text-center">
+  <div className="max-w-6xl mx-auto px-6">
 
-            <h2 className="text-2xl font-bold text-green-400 mb-3">
-              🏢 FC Immo
-            </h2>
+    <div className="flex flex-col items-center text-center">
 
-            <p className="text-gray-400">
-              Trouver. Louer. Acheter. En toute confiance.
-            </p>
+      {/* LOGO */}
+      <div className="bg-white rounded-2xl px-5 py-3 shadow-lg">
+        <img
+          src="/logo-fc-immo.png"
+          alt="FC Immo"
+          className="w-auto h-20 object-contain"
+        />
+      </div>
 
-            <p className="text-gray-500 text-sm mt-6">
-              © 2026 FC Immo — Tous droits réservés.
-            </p>
+      {/* SLOGAN */}
+      <p className="text-gray-300 mt-6 text-lg">
+        Trouver. Louer. Acheter. En toute confiance.
+      </p>
 
-          </div>
+      {/* LIGNE */}
+      <div className="w-24 h-1 bg-green-600 rounded-full mt-6" />
 
-        </footer>
+      {/* COPYRIGHT */}
+      <p className="text-gray-500 text-sm mt-6">
+        © 2026 FC Immo — Tous droits réservés.
+      </p>
 
+    </div>
+
+  </div>
+
+</footer>
       </main>
     </>
   );
