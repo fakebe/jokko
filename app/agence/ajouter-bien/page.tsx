@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/lib/supabase";
@@ -20,14 +20,81 @@ export default function AjouterBienPage() {
   const [surface, setSurface] = useState("");
   const [description, setDescription] = useState("");
 
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<
     "success" | "error" | ""
   >("");
   const [loading, setLoading] = useState(false);
+
+  // Nettoyage des URLs de prévisualisation
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [imagePreviews]);
+
+  function choisirImages(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const fichiers = Array.from(e.target.files || []);
+
+    if (fichiers.length === 0) {
+      return;
+    }
+
+    const imagesValides = fichiers.filter((file) =>
+      file.type.startsWith("image/")
+    );
+
+    if (imagesValides.length === 0) {
+      setMessage("Veuillez sélectionner uniquement des images.");
+      setMessageType("error");
+      return;
+    }
+
+    const anciennesUrls = imagePreviews;
+
+    anciennesUrls.forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+
+    setImages(imagesValides);
+    setImagePreviews(
+      imagesValides.map((file) =>
+        URL.createObjectURL(file)
+      )
+    );
+
+    setMessage("");
+    setMessageType("");
+
+    e.target.value = "";
+  }
+
+  function supprimerImage(index: number) {
+    const url = imagePreviews[index];
+
+    if (url) {
+      URL.revokeObjectURL(url);
+    }
+
+    setImages((anciennesImages) =>
+      anciennesImages.filter(
+        (_, imageIndex) => imageIndex !== index
+      )
+    );
+
+    setImagePreviews((anciennesPreviews) =>
+      anciennesPreviews.filter(
+        (_, imageIndex) => imageIndex !== index
+      )
+    );
+  }
 
   async function handleAjouterBien(
     e: React.FormEvent<HTMLFormElement>
@@ -38,123 +105,242 @@ export default function AjouterBienPage() {
     setMessageType("");
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      setMessage("Vous devez être connecté pour ajouter un bien.");
-      setMessageType("error");
-      setLoading(false);
-      return;
-    }
-
-    if (!titre.trim()) {
-      setMessage("Veuillez renseigner le titre du bien.");
-      setMessageType("error");
-      setLoading(false);
-      return;
-    }
-
-    if (!prix || Number(prix) <= 0) {
-      setMessage("Veuillez renseigner un prix valide.");
-      setMessageType("error");
-      setLoading(false);
-      return;
-    }
-
-    const { data: agence, error: agenceError } = await supabase
-      .from("agences")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (agenceError || !agence) {
-      console.error("ERREUR AGENCE :", agenceError);
-
-      setMessage(
-        "Impossible de trouver votre agence. Vérifiez votre profil agence."
-      );
-      setMessageType("error");
-      setLoading(false);
-      return;
-    }
-
-    let imageUrl = "";
-
-    // Upload de la photo
-    if (image) {
-      const extension =
-        image.name.split(".").pop()?.toLowerCase() || "jpg";
-
-      const nomFichier = `${user.id}-${Date.now()}.${extension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("bien-images")
-        .upload(nomFichier, image);
-
-      if (uploadError) {
-        console.error(
-          "ERREUR UPLOAD PHOTO :",
-          uploadError
-        );
-
+      if (!user) {
         setMessage(
-          "Impossible d'envoyer la photo. Vérifiez le fichier et réessayez."
+          "Vous devez être connecté pour ajouter un bien."
         );
         setMessageType("error");
         setLoading(false);
         return;
       }
 
-      const { data: urlData } = supabase.storage
-        .from("bien-images")
-        .getPublicUrl(nomFichier);
+      if (!titre.trim()) {
+        setMessage(
+          "Veuillez renseigner le titre du bien."
+        );
+        setMessageType("error");
+        setLoading(false);
+        return;
+      }
 
-      imageUrl = urlData.publicUrl;
-    }
+      if (!prix || Number(prix) <= 0) {
+        setMessage(
+          "Veuillez renseigner un prix valide."
+        );
+        setMessageType("error");
+        setLoading(false);
+        return;
+      }
 
-    const { error } = await supabase.from("biens").insert({
-      agence_id: agence.id,
-      user_id: user.id,
-      titre: titre.trim(),
-      type_bien: typeBien,
-      transaction,
-      statut: "Disponible",
-      ville,
-      quartier: quartier.trim() || null,
-      prix: Number(prix),
-      chambres: chambres ? Number(chambres) : null,
-      salles_bain: sallesBain
-        ? Number(sallesBain)
-        : null,
-      surface: surface ? Number(surface) : null,
-      description: description.trim() || null,
-      image_url: imageUrl || null,
-    });
+      const { data: agence, error: agenceError } =
+        await supabase
+          .from("agences")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
 
-    if (error) {
+      if (agenceError || !agence) {
+        console.error(
+          "ERREUR AGENCE :",
+          agenceError
+        );
+
+        setMessage(
+          "Impossible de trouver votre agence. Vérifiez votre profil agence."
+        );
+        setMessageType("error");
+        setLoading(false);
+        return;
+      }
+
+      /*
+       * 1. Création du bien
+       *
+       * image_url sera complété après l'upload
+       * de la première image.
+       */
+      const { data: nouveauBien, error: bienError } =
+        await supabase
+          .from("biens")
+          .insert({
+            agence_id: agence.id,
+            user_id: user.id,
+            titre: titre.trim(),
+            type_bien: typeBien,
+            transaction,
+            statut: "Disponible",
+            ville,
+            quartier: quartier.trim() || null,
+            prix: Number(prix),
+            chambres: chambres
+              ? Number(chambres)
+              : null,
+            salles_bain: sallesBain
+              ? Number(sallesBain)
+              : null,
+            surface: surface
+              ? Number(surface)
+              : null,
+            description:
+              description.trim() || null,
+            image_url: null,
+          })
+          .select("id")
+          .single();
+
+      if (bienError || !nouveauBien) {
+        console.error(
+          "ERREUR AJOUT BIEN :",
+          bienError
+        );
+
+        setMessage(
+          `Impossible d'ajouter le bien : ${
+            bienError?.message || "erreur inconnue"
+          }`
+        );
+        setMessageType("error");
+        setLoading(false);
+        return;
+      }
+
+      /*
+       * 2. Upload des photos
+       */
+      const imagesEnregistrees: {
+        bien_id: string;
+        image_url: string;
+        ordre: number;
+      }[] = [];
+
+      for (
+        let index = 0;
+        index < images.length;
+        index++
+      ) {
+        const image = images[index];
+
+        const extension =
+          image.name
+            .split(".")
+            .pop()
+            ?.toLowerCase() || "jpg";
+
+        const nomFichier =
+          `${user.id}-${nouveauBien.id}-${Date.now()}-${index}.${extension}`;
+
+        const { error: uploadError } =
+          await supabase.storage
+            .from("bien-images")
+            .upload(nomFichier, image);
+
+        if (uploadError) {
+          console.error(
+            "ERREUR UPLOAD PHOTO :",
+            uploadError
+          );
+
+          setMessage(
+            `La photo ${index + 1} n'a pas pu être envoyée.`
+          );
+          setMessageType("error");
+          setLoading(false);
+          return;
+        }
+
+        const { data: urlData } =
+          supabase.storage
+            .from("bien-images")
+            .getPublicUrl(nomFichier);
+
+        const imageUrl = urlData.publicUrl;
+
+        imagesEnregistrees.push({
+          bien_id: nouveauBien.id,
+          image_url: imageUrl,
+          ordre: index,
+        });
+      }
+
+      /*
+       * 3. Enregistrement des photos dans bien_images
+       */
+      if (imagesEnregistrees.length > 0) {
+        const { error: imagesError } =
+          await supabase
+            .from("bien_images")
+            .insert(imagesEnregistrees);
+
+        if (imagesError) {
+  console.error("ERREUR ENREGISTREMENT PHOTOS");
+  console.error("message :", imagesError.message);
+  console.error("code :", imagesError.code);
+  console.error("details :", imagesError.details);
+  console.error("hint :", imagesError.hint);
+  console.error("erreur complète :", JSON.stringify(imagesError));
+
+  setMessage(
+    `Erreur photos : ${imagesError.message || "erreur inconnue"}`
+  );
+  setMessageType("error");
+  setLoading(false);
+  return;
+}
+
+        /*
+         * 4. Première photo = image principale
+         */
+        const premiereImage =
+          imagesEnregistrees[0].image_url;
+
+        const { error: imagePrincipaleError } =
+          await supabase
+            .from("biens")
+            .update({
+              image_url: premiereImage,
+            })
+            .eq("id", nouveauBien.id)
+            .eq("user_id", user.id);
+
+        if (imagePrincipaleError) {
+          console.error(
+            "ERREUR IMAGE PRINCIPALE :",
+            imagePrincipaleError
+          );
+        }
+      }
+
+      setMessage(
+        `✅ Bien ajouté avec succès${
+          images.length > 1
+            ? ` avec ${images.length} photos`
+            : ""
+        } !`
+      );
+      setMessageType("success");
+      setLoading(false);
+
+      setTimeout(() => {
+        router.push("/agence/mes-biens");
+        router.refresh();
+      }, 1200);
+    } catch (error) {
       console.error(
-        "ERREUR AJOUT BIEN :",
+        "ERREUR INATTENDUE :",
         error
       );
 
       setMessage(
-        `Impossible d'ajouter le bien : ${error.message}`
+        "Une erreur inattendue est survenue. Veuillez réessayer."
       );
       setMessageType("error");
       setLoading(false);
-      return;
     }
-
-    setMessage("✅ Bien ajouté avec succès !");
-    setMessageType("success");
-    setLoading(false);
-
-    setTimeout(() => {
-      router.push("/agence/mes-biens");
-      router.refresh();
-    }, 1000);
   }
 
   return (
@@ -168,7 +354,9 @@ export default function AjouterBienPage() {
           <div className="mb-6">
             <button
               type="button"
-              onClick={() => router.push("/agence")}
+              onClick={() =>
+                router.push("/agence")
+              }
               className="inline-flex items-center gap-2 text-green-700 font-semibold hover:text-green-900 transition"
             >
               ← Retour à mon espace
@@ -200,7 +388,8 @@ export default function AjouterBienPage() {
                 </h1>
 
                 <p className="text-green-100 mt-2">
-                  Publiez une nouvelle annonce immobilière sur FC Immo.
+                  Publiez une nouvelle annonce immobilière
+                  sur FC Immo.
                 </p>
               </div>
 
@@ -229,7 +418,6 @@ export default function AjouterBienPage() {
                   </p>
                 </div>
 
-                {/* TITRE */}
                 <div>
                   <label
                     htmlFor="titre"
@@ -251,7 +439,6 @@ export default function AjouterBienPage() {
                   />
                 </div>
 
-                {/* TYPE + TRANSACTION */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
 
                   <div>
@@ -391,7 +578,6 @@ export default function AjouterBienPage() {
                   </p>
                 </div>
 
-                {/* PRIX */}
                 <div>
                   <label
                     htmlFor="prix"
@@ -400,23 +586,20 @@ export default function AjouterBienPage() {
                     Prix (FCFA) *
                   </label>
 
-                  <div className="relative">
-                    <input
-                      id="prix"
-                      type="number"
-                      min="1"
-                      placeholder="Ex : 50000000"
-                      value={prix}
-                      onChange={(e) =>
-                        setPrix(e.target.value)
-                      }
-                      className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      required
-                    />
-                  </div>
+                  <input
+                    id="prix"
+                    type="number"
+                    min="1"
+                    placeholder="Ex : 50000000"
+                    value={prix}
+                    onChange={(e) =>
+                      setPrix(e.target.value)
+                    }
+                    className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    required
+                  />
                 </div>
 
-                {/* CARACTÉRISTIQUES */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-5">
 
                   <div>
@@ -516,7 +699,7 @@ export default function AjouterBienPage() {
 
               </section>
 
-              {/* PHOTO */}
+              {/* PHOTOS */}
               <section className="mt-10 pt-8 border-t border-gray-100">
 
                 <div className="mb-5">
@@ -525,68 +708,111 @@ export default function AjouterBienPage() {
                   </p>
 
                   <h2 className="text-2xl font-bold text-gray-900 mt-1">
-                    Photo du bien
+                    Photos du bien
                   </h2>
 
                   <p className="text-gray-500 mt-1">
-                    Ajoutez une photo claire et attractive de votre bien.
+                    Ajoutez plusieurs photos pour présenter votre bien.
                   </p>
                 </div>
 
+                {/* SÉLECTION */}
                 <label
-                  htmlFor="image"
-                  className="block border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-green-500 transition cursor-pointer"
+                  htmlFor="images"
+                  className="block border-2 border-dashed border-gray-300 rounded-2xl p-6 sm:p-8 text-center hover:border-green-500 hover:bg-green-50/30 transition cursor-pointer"
                 >
-                  <div className="text-4xl">
+                  <div className="text-5xl">
                     📷
                   </div>
 
                   <p className="font-semibold text-gray-800 mt-3">
-                    Choisir une photo
+                    Choisir plusieurs photos
                   </p>
 
                   <p className="text-sm text-gray-500 mt-1">
-                    JPG, PNG ou autre image
+                    Vous pouvez sélectionner plusieurs images à la fois.
                   </p>
 
                   <input
-                    id="image"
+                    id="images"
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
-                    onChange={(e) => {
-                      const file =
-                        e.target.files?.[0];
-
-                      if (!file) return;
-
-                      setImage(file);
-                      setImagePreview(
-                        URL.createObjectURL(file)
-                      );
-                    }}
+                    onChange={choisirImages}
                   />
                 </label>
 
-                {imagePreview && (
-                  <div className="mt-5 relative">
+                {/* APERÇU */}
+                {images.length > 0 && (
+                  <div className="mt-6">
 
-                    <img
-                      src={imagePreview}
-                      alt="Aperçu du bien"
-                      className="w-full max-h-96 object-cover rounded-2xl border border-gray-200"
-                    />
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <h3 className="font-bold text-gray-900">
+                        {images.length} photo
+                        {images.length > 1 ? "s" : ""} sélectionnée
+                        {images.length > 1 ? "s" : ""}
+                      </h3>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImage(null);
-                        setImagePreview("");
-                      }}
-                      className="absolute top-3 right-3 bg-white text-red-600 px-4 py-2 rounded-xl shadow-md font-semibold hover:bg-red-50"
-                    >
-                      Supprimer la photo
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          imagePreviews.forEach((url) =>
+                            URL.revokeObjectURL(url)
+                          );
+
+                          setImages([]);
+                          setImagePreviews([]);
+                        }}
+                        className="text-sm font-semibold text-red-600 hover:text-red-700"
+                      >
+                        Tout supprimer
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+
+                      {imagePreviews.map(
+                        (preview, index) => (
+                          <div
+                            key={`${preview}-${index}`}
+                            className="relative group"
+                          >
+                            <img
+                              src={preview}
+                              alt={`Aperçu ${index + 1}`}
+                              className="w-full h-36 sm:h-44 object-cover rounded-2xl border border-gray-200"
+                            />
+
+                            {/* NUMÉRO */}
+                            <div className="absolute top-2 left-2 bg-green-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
+                              {index === 0
+                                ? "Principale"
+                                : `Photo ${index + 1}`}
+                            </div>
+
+                            {/* SUPPRIMER */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                supprimerImage(index)
+                              }
+                              className="absolute top-2 right-2 bg-white text-red-600 w-9 h-9 rounded-full shadow-md font-bold hover:bg-red-50"
+                              aria-label={`Supprimer la photo ${index + 1}`}
+                            >
+                              ✕
+                            </button>
+
+                          </div>
+                        )
+                      )}
+
+                    </div>
+
+                    <p className="text-sm text-gray-400 mt-3">
+                      La première photo sera utilisée comme photo principale
+                      de l’annonce.
+                    </p>
 
                   </div>
                 )}
@@ -602,6 +828,9 @@ export default function AjouterBienPage() {
                       : "bg-red-50 text-red-700 border border-red-200"
                   }`}
                 >
+                  {messageType === "success"
+                    ? "✅ "
+                    : "⚠️ "}
                   {message}
                 </div>
               )}
