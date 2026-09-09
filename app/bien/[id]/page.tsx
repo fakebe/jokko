@@ -37,6 +37,7 @@ type Agence = {
   telephone: string | null;
   email: string | null;
   ville: string | null;
+  verifiee: boolean;
 };
 
 export default function BienPage() {
@@ -121,8 +122,8 @@ export default function BienPage() {
         await supabase
           .from("agences")
           .select(
-            "id, nom_agence, responsable, telephone, email, ville"
-          )
+  "id, nom_agence, responsable, telephone, email, ville, verifiee"
+)
           .eq("id", bienData.agence_id)
           .maybeSingle();
 
@@ -455,13 +456,21 @@ export default function BienPage() {
                         </div>
 
                         <div className="min-w-0">
-                          <h3 className="font-bold text-lg text-gray-900 truncate">
-                            {agence.nom_agence}
-                          </h3>
+                          <div className="flex flex-wrap items-center gap-2">
+  <h3 className="font-bold text-lg text-gray-900 truncate">
+    {agence.nom_agence}
+  </h3>
 
-                          <p className="text-sm text-gray-500">
-                            Agence immobilière
-                          </p>
+  {agence.verifiee && (
+    <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
+      ✅ Vérifiée
+    </span>
+  )}
+</div>
+
+<p className="text-sm text-gray-500 mt-1">
+  Agence immobilière
+</p>
                         </div>
 
                       </div>
