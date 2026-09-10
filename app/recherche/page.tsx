@@ -39,12 +39,29 @@ function RecherchePageContent() {
     searchParams.get("ville") || ""
   );
 
-  const [quartier, setQuartier] = useState("");
-  const [prixMin, setPrixMin] = useState("");
-  const [prixMax, setPrixMax] = useState("");
-  const [chambresMin, setChambresMin] = useState("");
-  const [surfaceMin, setSurfaceMin] = useState("");
-  const [tri, setTri] = useState("recent");
+  const [quartier, setQuartier] = useState(
+    searchParams.get("quartier") || ""
+  );
+
+  const [prixMin, setPrixMin] = useState(
+    searchParams.get("prixMin") || ""
+  );
+
+  const [prixMax, setPrixMax] = useState(
+    searchParams.get("prixMax") || ""
+  );
+
+  const [chambresMin, setChambresMin] = useState(
+    searchParams.get("chambresMin") || ""
+  );
+
+  const [surfaceMin, setSurfaceMin] = useState(
+    searchParams.get("surfaceMin") || ""
+  );
+
+  const [tri, setTri] = useState(
+    searchParams.get("tri") || "recent"
+  );
 
   useEffect(() => {
     rechercherBiens();
@@ -79,28 +96,34 @@ function RecherchePageContent() {
       );
     }
 
-    if (prixMin) {
+    if (prixMin && Number(prixMin) >= 0) {
       query = query.gte(
         "prix",
         Number(prixMin)
       );
     }
 
-    if (prixMax) {
+    if (prixMax && Number(prixMax) >= 0) {
       query = query.lte(
         "prix",
         Number(prixMax)
       );
     }
 
-    if (chambresMin) {
+    if (
+      chambresMin &&
+      Number(chambresMin) >= 0
+    ) {
       query = query.gte(
         "chambres",
         Number(chambresMin)
       );
     }
 
-    if (surfaceMin) {
+    if (
+      surfaceMin &&
+      Number(surfaceMin) >= 0
+    ) {
       query = query.gte(
         "surface",
         Number(surfaceMin)
@@ -143,6 +166,127 @@ function RecherchePageContent() {
     setLoading(false);
   }
 
+  function mettreAJourURL() {
+    const params = new URLSearchParams();
+
+    if (transaction) {
+      params.set("transaction", transaction);
+    }
+
+    if (typeBien) {
+      params.set("type", typeBien);
+    }
+
+    if (ville) {
+      params.set("ville", ville);
+    }
+
+    if (quartier.trim()) {
+      params.set("quartier", quartier.trim());
+    }
+
+    if (prixMin) {
+      params.set("prixMin", prixMin);
+    }
+
+    if (prixMax) {
+      params.set("prixMax", prixMax);
+    }
+
+    if (chambresMin) {
+      params.set(
+        "chambresMin",
+        chambresMin
+      );
+    }
+
+    if (surfaceMin) {
+      params.set(
+        "surfaceMin",
+        surfaceMin
+      );
+    }
+
+    if (tri !== "recent") {
+      params.set("tri", tri);
+    }
+
+    const queryString = params.toString();
+
+    router.push(
+      queryString
+        ? `/recherche?${queryString}`
+        : "/recherche",
+      { scroll: false }
+    );
+  }
+
+  async function lancerRecherche() {
+    mettreAJourURL();
+    await rechercherBiens();
+  }
+
+  async function changerTri(
+    nouveauTri: string
+  ) {
+    setTri(nouveauTri);
+
+    const params = new URLSearchParams();
+
+    if (transaction) {
+      params.set("transaction", transaction);
+    }
+
+    if (typeBien) {
+      params.set("type", typeBien);
+    }
+
+    if (ville) {
+      params.set("ville", ville);
+    }
+
+    if (quartier.trim()) {
+      params.set("quartier", quartier.trim());
+    }
+
+    if (prixMin) {
+      params.set("prixMin", prixMin);
+    }
+
+    if (prixMax) {
+      params.set("prixMax", prixMax);
+    }
+
+    if (chambresMin) {
+      params.set(
+        "chambresMin",
+        chambresMin
+      );
+    }
+
+    if (surfaceMin) {
+      params.set(
+        "surfaceMin",
+        surfaceMin
+      );
+    }
+
+    if (nouveauTri !== "recent") {
+      params.set("tri", nouveauTri);
+    }
+
+    const queryString = params.toString();
+
+    router.push(
+      queryString
+        ? `/recherche?${queryString}`
+        : "/recherche",
+      { scroll: false }
+    );
+
+    await rechercherBiens();
+  }
+
   function reinitialiser() {
     setTransaction("");
     setTypeBien("");
@@ -154,11 +298,13 @@ function RecherchePageContent() {
     setSurfaceMin("");
     setTri("recent");
 
-    router.push("/recherche");
+    router.push("/recherche", {
+      scroll: false,
+    });
 
     setTimeout(() => {
-      window.location.reload();
-    }, 100);
+      rechercherBiens();
+    }, 0);
   }
 
   return (
@@ -167,40 +313,62 @@ function RecherchePageContent() {
 
       <main className="min-h-screen bg-gray-50">
 
-        {/* EN-TÊTE */}
-        <section className="bg-green-700 text-white py-12 px-6">
-
-          <div className="max-w-6xl mx-auto">
+        {/* HERO */}
+        <section className="bg-green-700 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
 
             <button
+              type="button"
               onClick={() => router.push("/")}
-              className="mb-6 text-green-100 hover:text-white"
+              className="text-green-100 hover:text-white font-semibold mb-5 transition"
             >
               ← Retour à l'accueil
             </button>
 
-            <h1 className="text-4xl font-bold">
-              🔎 Rechercher un bien
+            <p className="text-green-200 text-sm font-semibold uppercase tracking-wide">
+              FC Immo
+            </p>
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-1">
+              🔎 Trouver votre bien
             </h1>
 
-            <p className="mt-2 text-green-100">
-              Trouvez le logement ou le terrain qui vous
-              correspond.
+            <p className="text-green-100 mt-3 max-w-2xl text-base sm:text-lg">
+              Recherchez une maison, un appartement, un terrain ou
+              un local selon vos besoins et votre budget.
             </p>
 
           </div>
         </section>
 
         {/* FILTRES */}
-        <section className="max-w-6xl mx-auto px-6 -mt-6">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-7 relative z-10">
 
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-lg p-5 sm:p-7">
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between gap-4 mb-6">
+
+              <div>
+                <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+                  Recherche
+                </p>
+
+                <h2 className="text-2xl font-bold text-gray-900 mt-1">
+                  Affinez vos critères
+                </h2>
+              </div>
+
+              <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-green-50 items-center justify-center text-2xl">
+                🔍
+              </div>
+
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
               {/* TRANSACTION */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Transaction
                 </label>
 
@@ -209,7 +377,7 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setTransaction(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">
                     Vente ou location
@@ -227,7 +395,7 @@ function RecherchePageContent() {
 
               {/* TYPE */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Type de bien
                 </label>
 
@@ -236,7 +404,7 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setTypeBien(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">
                     Tous les types
@@ -274,7 +442,7 @@ function RecherchePageContent() {
 
               {/* VILLE */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Ville
                 </label>
 
@@ -283,7 +451,7 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setVille(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">
                     Toutes les villes
@@ -321,7 +489,7 @@ function RecherchePageContent() {
 
               {/* QUARTIER */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Quartier
                 </label>
 
@@ -332,13 +500,13 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setQuartier(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               {/* PRIX MIN */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Prix minimum
                 </label>
 
@@ -350,13 +518,13 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setPrixMin(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               {/* PRIX MAX */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Prix maximum
                 </label>
 
@@ -368,13 +536,13 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setPrixMax(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               {/* CHAMBRES */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Chambres minimum
                 </label>
 
@@ -386,14 +554,14 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setChambresMin(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               {/* SURFACE */}
               <div>
-                <label className="block font-semibold text-gray-700 mb-2">
-                  Surface minimum (m²)
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Surface minimum
                 </label>
 
                 <input
@@ -404,25 +572,31 @@ function RecherchePageContent() {
                   onChange={(e) =>
                     setSurfaceMin(e.target.value)
                   }
-                  className="w-full p-3 rounded-xl border border-gray-300"
+                  className="w-full p-3.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
             </div>
 
-            {/* BOUTONS */}
-            <div className="flex flex-col md:flex-row gap-3 mt-6">
+            {/* ACTIONS */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
 
               <button
-                onClick={rechercherBiens}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl"
+                type="button"
+                onClick={lancerRecherche}
+                disabled={loading}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3.5 rounded-xl transition"
               >
-                🔎 Rechercher
+                {loading
+                  ? "Recherche..."
+                  : "🔎 Rechercher"}
               </button>
 
               <button
+                type="button"
                 onClick={reinitialiser}
-                className="md:w-48 border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-xl"
+                disabled={loading}
+                className="sm:w-48 border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3.5 rounded-xl transition"
               >
                 Réinitialiser
               </button>
@@ -432,18 +606,22 @@ function RecherchePageContent() {
           </div>
         </section>
 
-        {/* RÉSULTATS */}
-        <section className="max-w-6xl mx-auto px-6 py-12">
+        {/* RESULTATS */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
 
-          <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-6">
 
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                Résultats
+              <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+                Annonces
+              </p>
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+                Résultats de recherche
               </h2>
 
               {!loading && (
-                <p className="text-gray-500 mt-1">
+                <p className="text-gray-500 mt-2">
                   {biens.length} bien
                   {biens.length > 1 ? "s" : ""} trouvé
                   {biens.length > 1 ? "s" : ""}
@@ -451,74 +629,93 @@ function RecherchePageContent() {
               )}
             </div>
 
-            {/* TRI */}
-            <select
-              value={tri}
-              onChange={(e) => {
-                setTri(e.target.value);
-                setTimeout(() => {
-                  rechercherBiens();
-                }, 0);
-              }}
-              className="p-3 rounded-xl border border-gray-300 bg-white text-gray-700"
-            >
-              <option value="recent">
-                🆕 Plus récent
-              </option>
+            <div className="w-full lg:w-auto">
 
-              <option value="prix_asc">
-                💰 Prix croissant
-              </option>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Trier par
+              </label>
 
-              <option value="prix_desc">
-                💰 Prix décroissant
-              </option>
+              <select
+                value={tri}
+                onChange={(e) =>
+                  changerTri(e.target.value)
+                }
+                className="w-full lg:w-64 p-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="recent">
+                  🆕 Plus récent
+                </option>
 
-              <option value="surface">
-                📐 Plus grande surface
-              </option>
-            </select>
+                <option value="prix_asc">
+                  💰 Prix croissant
+                </option>
+
+                <option value="prix_desc">
+                  💰 Prix décroissant
+                </option>
+
+                <option value="surface">
+                  📐 Plus grande surface
+                </option>
+              </select>
+
+            </div>
 
           </div>
 
+          {/* CHARGEMENT */}
           {loading && (
-            <div className="bg-white rounded-2xl p-10 text-center">
-              <p className="text-gray-500">
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-12 text-center">
+
+              <div className="w-12 h-12 mx-auto rounded-full border-4 border-green-200 border-t-green-600 animate-spin" />
+
+              <p className="text-gray-600 mt-5 font-medium">
                 Recherche des biens...
               </p>
+
             </div>
           )}
 
+          {/* AUCUN RESULTAT */}
           {!loading && biens.length === 0 && (
-            <div className="bg-white rounded-2xl p-12 text-center">
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-10 sm:p-14 text-center">
 
-              <div className="text-6xl mb-5">
+              <div className="w-20 h-20 mx-auto rounded-2xl bg-green-50 flex items-center justify-center text-5xl">
                 🏠
               </div>
 
-              <h3 className="text-xl font-bold text-gray-800">
-                Aucun bien disponible
+              <h3 className="text-2xl font-bold text-gray-900 mt-6">
+                Aucun bien trouvé
               </h3>
 
-              <p className="text-gray-500 mt-2">
+              <p className="text-gray-500 mt-2 max-w-md mx-auto">
                 Aucun bien disponible ne correspond à vos critères.
+                Essayez de modifier les filtres.
               </p>
+
+              <button
+                type="button"
+                onClick={reinitialiser}
+                className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl"
+              >
+                Réinitialiser les filtres
+              </button>
 
             </div>
           )}
 
+          {/* LISTE */}
           {!loading && biens.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
               {biens.map((bien) => (
-
-                <div
+                <article
                   key={bien.id}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition"
+                  className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition"
                 >
 
-                  {/* PHOTO */}
-                  <div className="h-48 bg-green-100 flex items-center justify-center overflow-hidden">
+                  {/* IMAGE */}
+                  <div className="relative h-56 bg-green-50 overflow-hidden">
 
                     {bien.image_url ? (
                       <img
@@ -527,84 +724,120 @@ function RecherchePageContent() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-6xl">
-                        🏡
-                      </span>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-7xl">
+                          🏠
+                        </span>
+                      </div>
                     )}
+
+                    <div className="absolute top-4 left-4">
+
+                      <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow">
+                        {bien.transaction === "Vente"
+                          ? "À vendre"
+                          : "À louer"}
+                      </span>
+
+                    </div>
 
                   </div>
 
                   <div className="p-5">
 
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between gap-3">
 
                       <span className="text-sm font-semibold text-green-700">
-                        {bien.transaction}
+                        {bien.type_bien}
                       </span>
 
-                      <span className="text-sm text-gray-500">
-                        {bien.type_bien}
+                      <span className="text-xs font-medium text-gray-400">
+                        Disponible
                       </span>
 
                     </div>
 
-                    <h3 className="text-xl font-bold text-gray-800 mt-3">
+                    <h3 className="text-xl font-bold text-gray-900 mt-2 line-clamp-2">
                       {bien.titre}
                     </h3>
 
-                    <p className="text-gray-500 mt-2">
+                    <p className="text-gray-500 text-sm mt-2">
                       📍 {bien.ville}
                       {bien.quartier
                         ? `, ${bien.quartier}`
                         : ""}
                     </p>
 
-                    <p className="text-green-700 font-bold text-xl mt-4">
+                    <p className="text-green-700 font-extrabold text-2xl mt-4">
                       {Number(
                         bien.prix
                       ).toLocaleString("fr-FR")}{" "}
-                      FCFA
+                      <span className="text-base font-semibold">
+                        FCFA
+                      </span>
                     </p>
 
-                    <div className="grid grid-cols-3 gap-2 mt-4 text-sm text-gray-600">
+                    <div className="grid grid-cols-3 gap-2 mt-5">
 
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        🛏️
-                        <br />
-                        {bien.chambres ?? "-"}
+                      <div className="bg-gray-50 rounded-xl p-3 text-center">
+                        <div className="text-lg">
+                          🛏️
+                        </div>
+
+                        <p className="font-bold text-gray-800 mt-1">
+                          {bien.chambres ?? "-"}
+                        </p>
+
+                        <p className="text-[11px] text-gray-500">
+                          Chambres
+                        </p>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        🚿
-                        <br />
-                        {bien.salles_bain ?? "-"}
+                      <div className="bg-gray-50 rounded-xl p-3 text-center">
+                        <div className="text-lg">
+                          🚿
+                        </div>
+
+                        <p className="font-bold text-gray-800 mt-1">
+                          {bien.salles_bain ?? "-"}
+                        </p>
+
+                        <p className="text-[11px] text-gray-500">
+                          S. de bain
+                        </p>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        📐
-                        <br />
-                        {bien.surface
-                          ? `${bien.surface} m²`
-                          : "-"}
+                      <div className="bg-gray-50 rounded-xl p-3 text-center">
+                        <div className="text-lg">
+                          📐
+                        </div>
+
+                        <p className="font-bold text-gray-800 mt-1">
+                          {bien.surface ?? "-"}
+                        </p>
+
+                        <p className="text-[11px] text-gray-500">
+                          m²
+                        </p>
                       </div>
 
                     </div>
 
                     <button
+                      type="button"
                       onClick={() =>
                         router.push(
                           `/bien/${bien.id}`
                         )
                       }
-                      className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl"
+                      className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition"
                     >
                       👁️ Voir le bien
                     </button>
 
                   </div>
 
-                </div>
-
+                </article>
               ))}
 
             </div>
@@ -613,13 +846,31 @@ function RecherchePageContent() {
         </section>
 
       </main>
-        </>
+    </>
   );
 }
 
 export default function RecherchePage() {
   return (
-    <Suspense fallback={<div>Chargement...</div>}>
+    <Suspense
+      fallback={
+        <>
+          <Navbar />
+
+          <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+            <div className="text-center">
+
+              <div className="w-12 h-12 mx-auto rounded-full border-4 border-green-200 border-t-green-600 animate-spin" />
+
+              <p className="text-gray-600 mt-5 font-medium">
+                Chargement de la recherche...
+              </p>
+
+            </div>
+          </main>
+        </>
+      }
+    >
       <RecherchePageContent />
     </Suspense>
   );
