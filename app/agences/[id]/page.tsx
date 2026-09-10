@@ -1,10 +1,9 @@
-import { supabase } from "@/lib/supabase";
+"use client";
 
-type PageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-};
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabase";
 
 type Agence = {
   id: string;
@@ -13,6 +12,7 @@ type Agence = {
   telephone: string | null;
   email: string | null;
   ville: string | null;
+  verifiee: boolean;
 };
 
 type Bien = {
@@ -20,6 +20,7 @@ type Bien = {
   titre: string;
   type_bien: string;
   transaction: string;
+  statut: string | null;
   ville: string;
   quartier: string | null;
   prix: number;
@@ -29,313 +30,432 @@ type Bien = {
   image_url: string | null;
 };
 
-export default async function AgencePage({
-  params,
-}: PageProps) {
-  const { id } = await params;
+export default function AgenceProfilPage() {
+  const params = useParams();
+  const router = useRouter();
 
-  // Récupérer l'agence
-  const { data: agence, error: agenceError } = await supabase
-    .from("agences")
-    .select(
-      "id, nom_agence, responsable, telephone, email, ville"
-    )
-    .eq("id", id)
-    .maybeSingle();
+  const id = String(params.id);
 
-  console.log("AGENCE :", agence);
-  console.log("ERREUR AGENCE :", agenceError);
+  const [agence, setAgence] = useState<Agence | null>(null);
+  const [biens, setBiens] = useState<Bien[]>([]);
 
-  if (agenceError || !agence) {
+  const [loading, setLoading] = useState(true);
+  const [erreur, setErreur] = useState("");
+
+  useEffect(() => {
+    chargerProfilAgence();
+  }, [id]);
+
+  async function chargerProfilAgence() {
+    setLoading(true);
+    setErreur("");
+
+    const {
+      data: agenceData,
+      error: agenceError,
+    } = await supabase
+      .from("agences")
+      .select(
+        "id, nom_agence, responsable, telephone, email, ville, verifiee"
+      )
+      .eq("id", id)
+      .maybeSingle();
+
+    if (agenceError) {
+      console.error(
+        "ERREUR CHARGEMENT AGENCE :",
+        agenceError
+      );
+
+      setErreur(
+        "Impossible de charger cette agence."
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (!agenceData) {
+      setErreur(
+        "Cette agence n'existe pas ou n'est plus disponible."
+      );
+      setLoading(false);
+      return;
+    }
+
+    setAgence(agenceData as Agence);
+
+    const {
+      data: biensData,
+      error: biensError,
+    } = await supabase
+      .from("biens")
+      .select(
+        "id, titre, type_bien, transaction, statut, ville, quartier, prix, chambres, salles_bain, surface, image_url"
+      )
+      .eq("agence_id", id)
+      .eq("statut", "Disponible")
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (biensError) {
+      console.error(
+        "ERREUR CHARGEMENT BIENS :",
+        biensError
+      );
+
+      setBiens([]);
+    } else {
+      setBiens((biensData || []) as Bien[]);
+    }
+
+    setLoading(false);
+  }
+
+  const telephone = agence?.telephone
+    ? agence.telephone
+        .replace(/\D/g, "")
+        .replace(/^221/, "")
+    : "";
+
+  const whatsappUrl = telephone
+    ? `https://wa.me/221${telephone}`
+    : "#";
+
+  if (loading) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <div className="text-5xl mb-4">🏢</div>
+      <>
+        <Navbar />
 
-          <h1 className="text-2xl font-bold text-gray-800">
-            Agence introuvable
-          </h1>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+          <div className="text-center">
 
-          <p className="text-gray-500 mt-3">
-            Cette agence n'existe pas ou n'est plus disponible.
-          </p>
+            <div className="w-12 h-12 mx-auto rounded-full border-4 border-green-200 border-t-green-600 animate-spin" />
 
-          <a
-            href="/agences"
-            className="inline-block mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl"
-          >
-            ← Voir les agences
-          </a>
-        </div>
-      </main>
+            <p className="text-gray-600 mt-5 font-medium">
+              Chargement du profil de l'agence...
+            </p>
+
+          </div>
+        </main>
+      </>
     );
   }
 
-  // Récupérer les biens de l'agence
-  const { data: biens, error: biensError } = await supabase
-    .from("biens")
-    .select(
-      "id, titre, type_bien, transaction, ville, quartier, prix, chambres, salles_bain, surface, image_url"
-    )
-    .eq("agence_id", agence.id)
-    .order("created_at", { ascending: false });
+  if (erreur || !agence) {
+    return (
+      <>
+        <Navbar />
 
-  console.log("BIENS DE L'AGENCE :", biens);
-  console.log("ERREUR BIENS :", biensError);
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+
+          <div className="w-full max-w-md bg-white rounded-3xl border border-gray-100 shadow-sm p-8 text-center">
+
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-green-50 flex items-center justify-center text-5xl">
+              🏢
+            </div>
+
+            <h1 className="text-2xl font-bold text-gray-900 mt-6">
+              Agence introuvable
+            </h1>
+
+            <p className="text-gray-500 mt-3">
+              {erreur}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => router.push("/agences")}
+              className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition"
+            >
+              ← Retour aux agences
+            </button>
+
+          </div>
+
+        </main>
+      </>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-6xl mx-auto">
+    <>
+      <Navbar />
 
-        {/* RETOUR */}
-        <div className="mb-6">
-          <a
-            href="/agences"
-            className="text-green-700 font-semibold hover:underline"
+      <main className="min-h-screen bg-gray-50">
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+          {/* RETOUR */}
+          <button
+            type="button"
+            onClick={() => router.push("/agences")}
+            className="inline-flex items-center gap-2 text-green-700 font-semibold hover:text-green-900 transition mb-6"
           >
             ← Retour aux agences
-          </a>
-        </div>
+          </button>
 
-        {/* INFORMATIONS AGENCE */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* PROFIL AGENCE */}
+          <section className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
 
-          <div className="bg-green-700 text-white p-8 md:p-10">
+            <div className="bg-green-700 text-white p-6 sm:p-8">
 
-            <div className="flex flex-col md:flex-row md:items-center gap-5">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
 
-              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl">
-                🏢
-              </div>
+                <div className="flex items-center gap-5">
 
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold">
-                  {agence.nom_agence}
-                </h1>
-
-                <p className="text-green-100 mt-2 text-lg">
-                  📍 {agence.ville || "Sénégal"}
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="p-6 md:p-10">
-
-            {/* CONTACTS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <div className="bg-gray-50 rounded-xl p-5">
-                <p className="text-sm text-gray-400">
-                  👤 Responsable
-                </p>
-
-                <p className="font-bold text-gray-800 mt-2">
-                  {agence.responsable || "-"}
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-xl p-5">
-                <p className="text-sm text-gray-400">
-                  📍 Ville
-                </p>
-
-                <p className="font-bold text-gray-800 mt-2">
-                  {agence.ville || "-"}
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-xl p-5">
-                <p className="text-sm text-gray-400">
-                  📞 Téléphone
-                </p>
-
-                <p className="font-bold text-gray-800 mt-2">
-                  {agence.telephone || "-"}
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-xl p-5">
-                <p className="text-sm text-gray-400">
-                  ✉️ Email
-                </p>
-
-                <p className="font-bold text-gray-800 mt-2">
-                  {agence.email || "-"}
-                </p>
-              </div>
-
-            </div>
-
-            {/* BOUTONS CONTACT */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-
-              {agence.telephone && (
-                <a
-                  href={`tel:${agence.telephone}`}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl text-center"
-                >
-                  📞 Appeler l'agence
-                </a>
-              )}
-
-              {agence.telephone && (
-                <a
-                  href={`https://wa.me/221${agence.telephone
-                    .replace(/\D/g, "")
-                    .replace(/^221/, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl text-center"
-                >
-                  💬 WhatsApp
-                </a>
-              )}
-
-            </div>
-
-            {/* BIENS */}
-            <div className="mt-12 border-t pt-10">
-
-              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-8">
-
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-800">
-                    Les biens de l'agence
-                  </h2>
-
-                  <p className="text-gray-500 mt-2">
-                    {biens?.length || 0} bien
-                    {(biens?.length || 0) > 1
-                      ? "s"
-                      : ""}{" "}
-                    publié
-                    {(biens?.length || 0) > 1
-                      ? "s"
-                      : ""}
-                  </p>
-                </div>
-
-              </div>
-
-              {!biens || biens.length === 0 ? (
-                <div className="bg-gray-50 rounded-2xl p-10 text-center">
-                  <div className="text-5xl mb-4">
-                    🏠
+                  <div className="w-20 h-20 bg-white/15 rounded-2xl flex items-center justify-center text-4xl shrink-0">
+                    🏢
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-800">
-                    Aucun bien publié
-                  </h3>
+                  <div>
 
-                  <p className="text-gray-500 mt-2">
-                    Cette agence n'a pas encore publié de biens.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex flex-wrap items-center gap-3">
 
-                  {(biens as Bien[]).map((bien) => (
-                    <div
-                      key={bien.id}
-                      className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition"
-                    >
+                      <h1 className="text-3xl sm:text-4xl font-bold">
+                        {agence.nom_agence}
+                      </h1>
 
-                      {/* PHOTO */}
-                      <div className="h-48 bg-green-100 flex items-center justify-center overflow-hidden">
+                      {agence.verifiee && (
+                        <span className="inline-flex items-center gap-1 bg-white text-green-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                          ✅ Vérifiée
+                        </span>
+                      )}
 
-                        {bien.image_url ? (
-                          <img
-                            src={bien.image_url}
-                            alt={bien.titre}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-6xl">
-                            🏡
-                          </span>
-                        )}
-
-                      </div>
-
-                      <div className="p-5">
-
-                        <div className="flex items-center justify-between gap-2">
-
-                          <span className="text-sm font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                            {bien.transaction}
-                          </span>
-
-                          <span className="text-sm text-gray-500">
-                            {bien.type_bien}
-                          </span>
-
-                        </div>
-
-                        <h3 className="text-xl font-bold text-gray-800 mt-3">
-                          {bien.titre}
-                        </h3>
-
-                        <p className="text-gray-500 mt-2">
-                          📍 {bien.ville}
-                          {bien.quartier
-                            ? `, ${bien.quartier}`
-                            : ""}
-                        </p>
-
-                        <p className="text-green-700 font-bold text-xl mt-4">
-                          {Number(
-                            bien.prix
-                          ).toLocaleString("fr-FR")}{" "}
-                          FCFA
-                        </p>
-
-                        <div className="grid grid-cols-3 gap-2 mt-4 text-sm text-gray-600">
-
-                          <div className="bg-gray-50 rounded-lg p-2 text-center">
-                            🛏️
-                            <br />
-                            {bien.chambres ?? "-"}
-                          </div>
-
-                          <div className="bg-gray-50 rounded-lg p-2 text-center">
-                            🚿
-                            <br />
-                            {bien.salles_bain ?? "-"}
-                          </div>
-
-                          <div className="bg-gray-50 rounded-lg p-2 text-center">
-                            📐
-                            <br />
-                            {bien.surface
-                              ? `${bien.surface} m²`
-                              : "-"}
-                          </div>
-
-                        </div>
-
-                        <a
-                          href={`/bien/${bien.id}`}
-                          className="block w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl text-center"
-                        >
-                          👁️ Voir le bien
-                        </a>
-
-                      </div>
                     </div>
-                  ))}
+
+                    <p className="text-green-100 mt-2">
+                      📍 {agence.ville || "Sénégal"}
+                    </p>
+
+                    <p className="text-green-100 mt-1">
+                      {biens.length} bien
+                      {biens.length > 1 ? "s" : ""} disponible
+                      {biens.length > 1 ? "s" : ""}
+                    </p>
+
+                  </div>
 
                 </div>
-              )}
+
+                {agence.telephone && (
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full md:w-auto bg-white text-green-700 hover:bg-green-50 font-bold px-6 py-3.5 rounded-xl text-center transition"
+                  >
+                    💬 Contacter sur WhatsApp
+                  </a>
+                )}
+
+              </div>
 
             </div>
 
-          </div>
-        </div>
+            {/* INFORMATIONS */}
+            <div className="p-6 sm:p-8">
 
-      </div>
-    </main>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div className="bg-gray-50 rounded-2xl p-5">
+                  <p className="text-sm text-gray-400">
+                    Responsable
+                  </p>
+
+                  <p className="font-bold text-gray-900 mt-1">
+                    👤 {agence.responsable || "-"}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-5">
+                  <p className="text-sm text-gray-400">
+                    Téléphone
+                  </p>
+
+                  <p className="font-bold text-gray-900 mt-1">
+                    📞 {agence.telephone || "-"}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-5">
+                  <p className="text-sm text-gray-400">
+                    Email
+                  </p>
+
+                  <p className="font-bold text-gray-900 mt-1 break-all">
+                    ✉️ {agence.email || "-"}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* BIENS DE L'AGENCE */}
+          <section className="mt-10">
+
+            <div className="mb-6">
+
+              <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+                Annonces
+              </p>
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+                Les biens de {agence.nom_agence}
+              </h2>
+
+              <p className="text-gray-500 mt-2">
+                Découvrez les biens actuellement disponibles auprès de cette agence.
+              </p>
+
+            </div>
+
+            {biens.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+
+                <div className="text-5xl">
+                  🏠
+                </div>
+
+                <h3 className="text-xl font-bold text-gray-900 mt-5">
+                  Aucun bien disponible
+                </h3>
+
+                <p className="text-gray-500 mt-2">
+                  Cette agence n'a actuellement aucun bien disponible.
+                </p>
+
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                {biens.map((bien) => (
+                  <article
+                    key={bien.id}
+                    className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg transition"
+                  >
+
+                    {/* IMAGE */}
+                    <div className="relative h-56 bg-green-50 overflow-hidden">
+
+                      {bien.image_url ? (
+                        <img
+                          src={bien.image_url}
+                          alt={bien.titre}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-7xl">
+                            🏠
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow">
+                          {bien.transaction === "Vente"
+                            ? "À vendre"
+                            : "À louer"}
+                        </span>
+                      </div>
+
+                    </div>
+
+                    {/* CONTENU */}
+                    <div className="p-5">
+
+                      <p className="text-sm font-semibold text-green-700">
+                        {bien.type_bien}
+                      </p>
+
+                      <h3 className="text-xl font-bold text-gray-900 mt-2 line-clamp-2">
+                        {bien.titre}
+                      </h3>
+
+                      <p className="text-sm text-gray-500 mt-2">
+                        📍 {bien.ville}
+                        {bien.quartier
+                          ? `, ${bien.quartier}`
+                          : ""}
+                      </p>
+
+                      <p className="text-2xl font-extrabold text-green-700 mt-4">
+                        {Number(
+                          bien.prix
+                        ).toLocaleString("fr-FR")}{" "}
+                        <span className="text-base">
+                          FCFA
+                        </span>
+                      </p>
+
+                      <div className="grid grid-cols-3 gap-2 mt-5">
+
+                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                          <div>🛏️</div>
+
+                          <p className="font-bold text-gray-800 mt-1">
+                            {bien.chambres ?? "-"}
+                          </p>
+
+                          <p className="text-[11px] text-gray-500">
+                            Chambres
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                          <div>🚿</div>
+
+                          <p className="font-bold text-gray-800 mt-1">
+                            {bien.salles_bain ?? "-"}
+                          </p>
+
+                          <p className="text-[11px] text-gray-500">
+                            S. de bain
+                          </p>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-3 text-center">
+                          <div>📐</div>
+
+                          <p className="font-bold text-gray-800 mt-1">
+                            {bien.surface ?? "-"}
+                          </p>
+
+                          <p className="text-[11px] text-gray-500">
+                            m²
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            `/bien/${bien.id}`
+                          )
+                        }
+                        className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition"
+                      >
+                        👁️ Voir le bien
+                      </button>
+
+                    </div>
+
+                  </article>
+                ))}
+
+              </div>
+            )}
+
+          </section>
+
+        </div>
+      </main>
+    </>
   );
 }
