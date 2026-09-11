@@ -196,14 +196,15 @@ function RecherchePageContent() {
       return;
     }
 
-    let resultats = (data || []) as Bien[];
+    let resultats: Bien[] = (data || []).map(
+      (bien: any) => ({
+        ...bien,
+        agence: Array.isArray(bien.agence)
+          ? bien.agence[0] || null
+          : bien.agence || null,
+      })
+    );
 
-    /*
-     * Filtre local pour les agences vérifiées.
-     *
-     * On garde ce filtre côté client pour éviter de compliquer
-     * la requête Supabase et de ne pas casser les autres filtres.
-     */
     if (verifieesUniquement) {
       resultats = resultats.filter(
         (bien) =>
@@ -730,9 +731,7 @@ function RecherchePageContent() {
 
               <button
                 type="button"
-                onClick={
-                  lancerRecherche
-                }
+                onClick={lancerRecherche}
                 disabled={loading}
                 className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3.5 rounded-xl transition"
               >
@@ -743,9 +742,7 @@ function RecherchePageContent() {
 
               <button
                 type="button"
-                onClick={
-                  reinitialiser
-                }
+                onClick={reinitialiser}
                 disabled={loading}
                 className="sm:w-48 border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3.5 rounded-xl transition"
               >
@@ -758,7 +755,7 @@ function RecherchePageContent() {
 
         </section>
 
-        {/* RÉSULTATS */}
+        {/* RESULTATS */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-6">
@@ -857,9 +854,7 @@ function RecherchePageContent() {
 
                 <button
                   type="button"
-                  onClick={
-                    reinitialiser
-                  }
+                  onClick={reinitialiser}
                   className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl"
                 >
                   Réinitialiser les filtres
@@ -897,25 +892,27 @@ function RecherchePageContent() {
                       )}
 
                       <div className="absolute top-4 left-4">
+
                         <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow">
-                          {bien.transaction ===
-                          "Vente"
+                          {bien.transaction === "Vente"
                             ? "À vendre"
                             : "À louer"}
                         </span>
+
                       </div>
 
                       {bien.agence?.verifiee && (
                         <div className="absolute top-4 right-4">
+
                           <span className="bg-white text-green-700 px-3 py-1.5 rounded-full text-xs font-bold shadow">
                             ✅ Vérifiée
                           </span>
+
                         </div>
                       )}
 
                     </div>
 
-                    {/* CONTENU */}
                     <div className="p-5">
 
                       <div className="flex items-center justify-between gap-3">

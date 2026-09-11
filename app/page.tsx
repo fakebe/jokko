@@ -105,7 +105,16 @@ export default function Home() {
       return;
     }
 
-    setBiens((data || []) as Bien[]);
+    const biensFormates: Bien[] = (data || []).map(
+      (bien: any) => ({
+        ...bien,
+        agence: Array.isArray(bien.agence)
+          ? bien.agence[0] || null
+          : bien.agence || null,
+      })
+    );
+
+    setBiens(biensFormates);
     setLoading(false);
   }
 
@@ -154,7 +163,6 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Trouver. Louer. Acheter.
               <br />
-
               <span className="text-green-200">
                 En toute confiance.
               </span>
@@ -287,6 +295,7 @@ export default function Home() {
               </div>
 
             </div>
+
           </div>
 
         </section>
@@ -324,6 +333,7 @@ export default function Home() {
             ))}
 
           </div>
+
         </section>
 
         {/* ANNONCES */}
@@ -387,6 +397,13 @@ export default function Home() {
                         `/bien/${bien.id}`
                       )
                     }
+                    onAgenceClick={() => {
+                      if (bien.agence_id) {
+                        router.push(
+                          `/agences/${bien.agence_id}`
+                        );
+                      }
+                    }}
                   />
                 ))}
 
@@ -431,8 +448,8 @@ export default function Home() {
               </h3>
 
               <p className="text-gray-500">
-                Retrouvez des agences vérifiées et identifiées sur
-                la plateforme.
+                Retrouvez des agences vérifiées et identifiées sur la
+                plateforme.
               </p>
             </div>
 
@@ -494,9 +511,11 @@ export default function Home() {
 function PropertyCard({
   bien,
   onClick,
+  onAgenceClick,
 }: {
   bien: Bien;
   onClick: () => void;
+  onAgenceClick: () => void;
 }) {
   return (
     <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group">
@@ -570,11 +589,7 @@ function PropertyCard({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              if (bien.agence_id) {
-                router.push(
-                  `/agences/${bien.agence_id}`
-                );
-              }
+              onAgenceClick();
             }}
             className="text-left text-sm text-gray-500 hover:text-green-700 mt-2 transition"
           >
@@ -592,6 +607,7 @@ function PropertyCard({
 
         {/* PRIX */}
         <div className="mt-4">
+
           <p className="text-xl sm:text-2xl font-bold text-green-700">
             {Number(
               bien.prix
@@ -602,6 +618,7 @@ function PropertyCard({
           <p className="text-xs sm:text-sm text-gray-400 mt-1">
             Prix affiché
           </p>
+
         </div>
 
         {/* CARACTÉRISTIQUES */}
