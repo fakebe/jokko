@@ -18,13 +18,34 @@ type Bien = {
   salles_bain: number | null;
   surface: number | null;
   image_url: string | null;
+  agence_id: string | null;
+  agence?: {
+    nom_agence: string;
+    verifiee: boolean;
+  } | null;
 };
 
 const categories = [
-  { icon: "🏠", name: "Maisons", type: "Maison" },
-  { icon: "🏢", name: "Appartements", type: "Appartement" },
-  { icon: "🌳", name: "Terrains", type: "Terrain" },
-  { icon: "🏪", name: "Locaux commerciaux", type: "Commerce" },
+  {
+    icon: "🏠",
+    name: "Maisons",
+    type: "Maison",
+  },
+  {
+    icon: "🏢",
+    name: "Appartements",
+    type: "Appartement",
+  },
+  {
+    icon: "🌳",
+    name: "Terrains",
+    type: "Terrain",
+  },
+  {
+    icon: "🏪",
+    name: "Locaux commerciaux",
+    type: "Commerce",
+  },
 ];
 
 export default function Home() {
@@ -33,7 +54,8 @@ export default function Home() {
   const [biens, setBiens] = useState<Bien[]>([]);
   const [typeRecherche, setTypeRecherche] = useState("");
   const [villeRecherche, setVilleRecherche] = useState("");
-  const [transactionRecherche, setTransactionRecherche] = useState("");
+  const [transactionRecherche, setTransactionRecherche] =
+    useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,20 +68,44 @@ export default function Home() {
     const { data, error } = await supabase
       .from("biens")
       .select(
-        "id,titre,type_bien,transaction,statut,ville,quartier,prix,chambres,salles_bain,surface,image_url"
+        `
+        id,
+        titre,
+        type_bien,
+        transaction,
+        statut,
+        ville,
+        quartier,
+        prix,
+        chambres,
+        salles_bain,
+        surface,
+        image_url,
+        agence_id,
+        agence:agences (
+          nom_agence,
+          verifiee
+        )
+      `
       )
       .eq("statut", "Disponible")
-      .order("created_at", { ascending: false })
+      .order("created_at", {
+        ascending: false,
+      })
       .limit(6);
 
     if (error) {
-      console.error("ERREUR CHARGEMENT BIENS :", error);
+      console.error(
+        "ERREUR CHARGEMENT BIENS :",
+        error
+      );
+
       setBiens([]);
       setLoading(false);
       return;
     }
 
-    setBiens(data || []);
+    setBiens((data || []) as Bien[]);
     setLoading(false);
   }
 
@@ -75,13 +121,18 @@ export default function Home() {
     }
 
     if (transactionRecherche) {
-      params.set("transaction", transactionRecherche);
+      params.set(
+        "transaction",
+        transactionRecherche
+      );
     }
 
     const queryString = params.toString();
 
     router.push(
-      queryString ? `/recherche?${queryString}` : "/recherche"
+      queryString
+        ? `/recherche?${queryString}`
+        : "/recherche"
     );
   }
 
@@ -93,6 +144,7 @@ export default function Home() {
 
         {/* HERO */}
         <section className="bg-green-700 text-white px-6 py-20">
+
           <div className="max-w-6xl mx-auto text-center">
 
             <p className="text-green-200 font-medium mb-3">
@@ -102,6 +154,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Trouver. Louer. Acheter.
               <br />
+
               <span className="text-green-200">
                 En toute confiance.
               </span>
@@ -120,7 +173,9 @@ export default function Home() {
                 <select
                   value={transactionRecherche}
                   onChange={(e) =>
-                    setTransactionRecherche(e.target.value)
+                    setTransactionRecherche(
+                      e.target.value
+                    )
                   }
                   className="p-4 rounded-xl border border-gray-200 text-gray-700 bg-white"
                 >
@@ -140,7 +195,9 @@ export default function Home() {
                 <select
                   value={typeRecherche}
                   onChange={(e) =>
-                    setTypeRecherche(e.target.value)
+                    setTypeRecherche(
+                      e.target.value
+                    )
                   }
                   className="p-4 rounded-xl border border-gray-200 text-gray-700 bg-white"
                 >
@@ -180,7 +237,9 @@ export default function Home() {
                 <select
                   value={villeRecherche}
                   onChange={(e) =>
-                    setVilleRecherche(e.target.value)
+                    setVilleRecherche(
+                      e.target.value
+                    )
                   }
                   className="p-4 rounded-xl border border-gray-200 text-gray-700 bg-white"
                 >
@@ -211,9 +270,14 @@ export default function Home() {
                   <option value="Ziguinchor">
                     Ziguinchor
                   </option>
+
+                  <option value="Autre">
+                    Autre
+                  </option>
                 </select>
 
                 <button
+                  type="button"
                   onClick={rechercher}
                   className="bg-green-600 hover:bg-green-800 text-white font-semibold p-4 rounded-xl transition"
                 >
@@ -221,8 +285,10 @@ export default function Home() {
                 </button>
 
               </div>
+
             </div>
           </div>
+
         </section>
 
         {/* CATÉGORIES */}
@@ -237,13 +303,14 @@ export default function Home() {
             {categories.map((category) => (
               <button
                 key={category.name}
-                onClick={() => {
+                type="button"
+                onClick={() =>
                   router.push(
                     `/recherche?type=${encodeURIComponent(
                       category.type
                     )}`
-                  );
-                }}
+                  )
+                }
                 className="bg-white rounded-2xl p-7 shadow-sm hover:shadow-lg border border-gray-100 transition text-center"
               >
                 <div className="text-4xl mb-4">
@@ -267,7 +334,11 @@ export default function Home() {
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
 
               <div>
-                <h2 className="text-3xl font-bold text-gray-800">
+                <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">
+                  À découvrir
+                </p>
+
+                <h2 className="text-3xl font-bold text-gray-800 mt-1">
                   Annonces récentes
                 </h2>
 
@@ -277,7 +348,10 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => router.push("/recherche")}
+                type="button"
+                onClick={() =>
+                  router.push("/recherche")
+                }
                 className="text-green-700 font-semibold hover:underline"
               >
                 Voir tout →
@@ -309,7 +383,9 @@ export default function Home() {
                     key={bien.id}
                     bien={bien}
                     onClick={() =>
-                      router.push(`/bien/${bien.id}`)
+                      router.push(
+                        `/bien/${bien.id}`
+                      )
                     }
                   />
                 ))}
@@ -318,6 +394,7 @@ export default function Home() {
             )}
 
           </div>
+
         </section>
 
         {/* CONFIANCE */}
@@ -354,8 +431,8 @@ export default function Home() {
               </h3>
 
               <p className="text-gray-500">
-                Retrouvez progressivement des agences vérifiées sur la
-                plateforme.
+                Retrouvez des agences vérifiées et identifiées sur
+                la plateforme.
               </p>
             </div>
 
@@ -375,42 +452,40 @@ export default function Home() {
             </div>
 
           </div>
+
         </section>
 
-       {/* FOOTER */}
-<footer className="bg-gray-950 text-white py-12">
+        {/* FOOTER */}
+        <footer className="bg-gray-950 text-white py-12">
 
-  <div className="max-w-6xl mx-auto px-6">
+          <div className="max-w-6xl mx-auto px-6">
 
-    <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center">
 
-      {/* LOGO */}
-      <div className="bg-white rounded-2xl px-5 py-3 shadow-lg">
-        <img
-          src="/logo-fc-immo.png"
-          alt="FC Immo"
-          className="w-auto h-20 object-contain"
-        />
-      </div>
+              <div className="bg-white rounded-2xl px-5 py-3 shadow-lg">
+                <img
+                  src="/logo-fc-immo.png"
+                  alt="FC Immo"
+                  className="w-auto h-20 object-contain"
+                />
+              </div>
 
-      {/* SLOGAN */}
-      <p className="text-gray-300 mt-6 text-lg">
-        Trouver. Louer. Acheter. En toute confiance.
-      </p>
+              <p className="text-gray-300 mt-6 text-lg">
+                Trouver. Louer. Acheter. En toute confiance.
+              </p>
 
-      {/* LIGNE */}
-      <div className="w-24 h-1 bg-green-600 rounded-full mt-6" />
+              <div className="w-24 h-1 bg-green-600 rounded-full mt-6" />
 
-      {/* COPYRIGHT */}
-      <p className="text-gray-500 text-sm mt-6">
-        © 2026 FC Immo — Tous droits réservés.
-      </p>
+              <p className="text-gray-500 text-sm mt-6">
+                © 2026 FC Immo — Tous droits réservés.
+              </p>
 
-    </div>
+            </div>
 
-  </div>
+          </div>
 
-</footer>
+        </footer>
+
       </main>
     </>
   );
@@ -442,23 +517,36 @@ function PropertyCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className="text-6xl sm:text-7xl">🏡</span>
+              <span className="text-6xl sm:text-7xl">
+                🏡
+              </span>
             </div>
           )}
 
-          {/* BADGE TRANSACTION */}
+          {/* TRANSACTION */}
           <div className="absolute top-3 left-3">
             <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-md">
-              {bien.transaction === "Vente" ? "À vendre" : "À louer"}
+              {bien.transaction === "Vente"
+                ? "À vendre"
+                : "À louer"}
             </span>
           </div>
 
-          {/* BADGE TYPE */}
+          {/* TYPE */}
           <div className="absolute top-3 right-3">
             <span className="bg-white/95 text-gray-700 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-md">
               {bien.type_bien}
             </span>
           </div>
+
+          {/* AGENCE VÉRIFIÉE */}
+          {bien.agence?.verifiee && (
+            <div className="absolute bottom-3 left-3">
+              <span className="bg-white text-green-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
+                ✅ Agence vérifiée
+              </span>
+            </div>
+          )}
 
         </div>
       </button>
@@ -466,7 +554,6 @@ function PropertyCard({
       {/* CONTENU */}
       <div className="p-4 sm:p-5">
 
-        {/* TITRE */}
         <button
           type="button"
           onClick={onClick}
@@ -477,29 +564,49 @@ function PropertyCard({
           </h3>
         </button>
 
+        {/* AGENCE */}
+        {bien.agence?.nom_agence && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (bien.agence_id) {
+                router.push(
+                  `/agences/${bien.agence_id}`
+                );
+              }
+            }}
+            className="text-left text-sm text-gray-500 hover:text-green-700 mt-2 transition"
+          >
+            🏢 {bien.agence.nom_agence}
+          </button>
+        )}
+
         {/* LOCALISATION */}
         <p className="text-gray-500 text-sm sm:text-base mt-2">
           📍 {bien.ville}
-          {bien.quartier ? `, ${bien.quartier}` : ""}
+          {bien.quartier
+            ? `, ${bien.quartier}`
+            : ""}
         </p>
 
         {/* PRIX */}
         <div className="mt-4">
-
           <p className="text-xl sm:text-2xl font-bold text-green-700">
-            {Number(bien.prix).toLocaleString("fr-FR")} FCFA
+            {Number(
+              bien.prix
+            ).toLocaleString("fr-FR")}{" "}
+            FCFA
           </p>
 
           <p className="text-xs sm:text-sm text-gray-400 mt-1">
             Prix affiché
           </p>
-
         </div>
 
         {/* CARACTÉRISTIQUES */}
         <div className="grid grid-cols-3 gap-2 mt-4">
 
-          {/* CHAMBRES */}
           <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3 text-center">
             <div className="text-lg sm:text-xl">
               🛏️
@@ -514,7 +621,6 @@ function PropertyCard({
             </p>
           </div>
 
-          {/* SALLES DE BAIN */}
           <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3 text-center">
             <div className="text-lg sm:text-xl">
               🚿
@@ -529,7 +635,6 @@ function PropertyCard({
             </p>
           </div>
 
-          {/* SURFACE */}
           <div className="bg-gray-50 rounded-xl p-2.5 sm:p-3 text-center">
             <div className="text-lg sm:text-xl">
               📐
